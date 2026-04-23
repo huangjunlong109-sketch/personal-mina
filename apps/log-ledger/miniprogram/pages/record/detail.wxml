@@ -1,0 +1,30 @@
+<view class="detail-page" wx:if="{{record}}">
+  <view class="detail-card">
+    <view class="detail-icon-wrap">
+      <text class="detail-emoji">{{record.emoji}}</text>
+    </view>
+    <text class="detail-category">{{record.category_name}}</text>
+    <text class="detail-amount {{record.type === 'income' ? 'detail-amount--income' : ''}}">
+      {{record.type === 'expense' ? '-' : '+'}}{{record.amountDisplay}}
+    </text>
+    <view class="detail-row">
+      <text class="detail-label">备注</text>
+      <text class="detail-value">{{record.note || '无'}}</text>
+    </view>
+    <view class="detail-row">
+      <text class="detail-label">日期</text>
+      <text class="detail-value">{{record.record_date}}</text>
+    </view>
+    <view class="detail-row">
+      <text class="detail-label">类型</text>
+      <text class="detail-value">{{record.type === 'expense' ? '支出' : '收入'}}</text>
+    </view>
+  </view>
+  <view class="detail-actions">
+    <view class="detail-actions-inner">
+      <view class="btn-edit" bindtap="onEdit">编辑</view>
+      <view class="detail-actions-divider" />
+      <view class="btn-delete-text" bindtap="onDelete">删除</view>
+    </view>
+  </view>
+</view>

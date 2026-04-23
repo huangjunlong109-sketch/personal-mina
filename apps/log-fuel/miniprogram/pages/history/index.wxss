@@ -1,0 +1,126 @@
+.container {
+  background: #F4F5F9;
+  min-height: 100vh;
+  padding-bottom: 40rpx;
+}
+
+.top-tip {
+  background: #EFF2FF;
+  padding: 20rpx 32rpx;
+  text-align: center;
+}
+
+.top-tip text { font-size: 24rpx; color: #6B7FC2; }
+
+.state-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 120rpx;
+  gap: 24rpx;
+}
+
+.empty-icon { font-size: 80rpx; }
+.empty-text { color: #8C8CA0; font-size: 30rpx; }
+
+.empty-btn {
+  margin-top: 16rpx;
+  padding: 20rpx 60rpx;
+  background: #6B7FC2;
+  border-radius: 56rpx;
+  color: #FFFFFF;
+  font-size: 28rpx;
+}
+
+.month-group { margin: 20rpx 24rpx; }
+
+.month-label {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1C1C3A;
+  padding: 16rpx 0;
+  display: block;
+}
+
+.record-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  margin-bottom: 20rpx;
+  padding: 28rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.card-day {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #1C1C3A;
+  min-width: 80rpx;
+}
+
+.card-kpi { flex: 1; margin-left: 20rpx; }
+
+.card-consumption {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #6B7FC2;
+  display: block;
+}
+
+.card-cost-km {
+  font-size: 24rpx;
+  color: #8C8CA0;
+}
+
+.card-more {
+  width: 60rpx;
+  text-align: center;
+  font-size: 36rpx;
+  color: #C0C0CC;
+  letter-spacing: 2rpx;
+}
+
+.card-detail {
+  background: #F8F9FD;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+}
+
+.detail-row {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  padding: 8rpx 0;
+}
+
+.detail-val { font-size: 28rpx; font-weight: 600; color: #1C1C3A; }
+.detail-lbl { font-size: 22rpx; color: #8C8CA0; margin-top: 4rpx; }
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-top: 16rpx;
+}
+
+.added-km { font-size: 24rpx; color: #6B7FC2; font-weight: 600; }
+
+.tag {
+  font-size: 22rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.tag-full { background: rgba(52,199,89,0.12); color: #34C759; }
+.tag-unfull { background: rgba(140,140,160,0.12); color: #8C8CA0; }
+.tag-issue { background: rgba(255,149,0,0.12); color: #FF9500; }

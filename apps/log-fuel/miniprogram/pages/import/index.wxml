@@ -1,0 +1,65 @@
+<view class="container">
+  <view class="section">
+    <view class="current-vehicle">
+      <text class="label">当前车辆</text>
+      <view wx:if="{{currentVehicle}}" class="vehicle-meta">
+        <text class="val">{{currentVehicle.brand}} {{currentVehicle.model}}</text>
+        <text wx:if="{{currentVehicle.plate}}" class="plate">{{currentVehicle.plate}}</text>
+      </view>
+      <text wx:else class="val">未选择</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="desc">
+      <text class="desc-title">📥 导入说明</text>
+      <text class="desc-line">1. 从原油耗工具导出 .xlsx 文件，通过微信发给自己</text>
+      <text class="desc-line">2. 点击「选择文件」从聊天记录中选取 .xlsx</text>
+      <text class="desc-line">3. 重复导入同一记录 ID 将自动更新</text>
+      <text class="desc-line">4. 数据异常行会标记「待核实」，可到历史记录查看</text>
+    </view>
+  </view>
+
+  <view class="section">
+    <view wx:if="{{fileName}}" class="file-row">
+      <text class="file-icon">📄</text>
+      <text class="file-name">{{fileName}}</text>
+      <text class="file-clear" bindtap="reset">×</text>
+    </view>
+    <view wx:else class="file-empty" bindtap="chooseFile">
+      <text class="file-empty-icon">📂</text>
+      <text class="file-empty-text">点击选择 .xlsx 文件</text>
+    </view>
+  </view>
+
+  <!-- 进度状态 -->
+  <view wx:if="{{status === 'parsing' || status === 'importing'}}" class="status-box">
+    <text class="status-text">{{progressText}}</text>
+  </view>
+
+  <!-- 结果 -->
+  <view wx:if="{{status === 'done' && result}}" class="result-box">
+    <text class="result-title">✅ 导入完成</text>
+    <text class="result-line">成功：{{result.success}} 条</text>
+    <text class="result-line">更新：{{result.updated}} 条</text>
+    <text class="result-line">跳过/失败：{{result.failed}} 条</text>
+    <view wx:if="{{result.issues && result.issues.length > 0}}" class="result-issues">
+      <text class="result-issue-title">⚠️ 以下行有异常，已标记待核实：</text>
+      <text wx:for="{{result.issues}}" wx:key="index" class="result-issue-item">
+        第 {{item.row}} 行：{{item.reason}}
+      </text>
+    </view>
+  </view>
+
+  <view wx:if="{{status === 'error' && result}}" class="error-box">
+    <text>❌ {{result.errorMsg}}</text>
+  </view>
+
+  <view wx:if="{{status !== 'parsing' && status !== 'importing'}}" class="btn-import {{!fileName ? 'disabled' : ''}}" bindtap="startImport">
+    <text>开始导入</text>
+  </view>
+
+  <view wx:if="{{status !== 'parsing' && status !== 'importing' && currentVehicle}}" class="btn-clear" bindtap="clearAllRecords">
+    <text>清空本车所有记录</text>
+  </view>
+</view>

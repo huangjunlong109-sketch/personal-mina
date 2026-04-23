@@ -1,0 +1,121 @@
+<view class="chart-records-page">
+  <view class="top-panel">
+    <view class="view-tabs">
+      <view
+        wx:for="{{viewOptions}}"
+        wx:key="key"
+        class="view-tab {{currentView === item.key ? 'view-tab--active' : ''}}"
+        bindtap="switchView"
+        data-key="{{item.key}}"
+      >{{item.label}}</view>
+    </view>
+    <view class="period-nav">
+      <text class="period-nav-btn" bindtap="prevPeriod">‹</text>
+      <view class="period-center">
+        <text class="period-title">{{periodShortLabel}}</text>
+        <view class="period-indicator"></view>
+      </view>
+      <text
+        class="period-nav-btn {{!canGoNext ? 'period-nav-btn--disabled' : ''}}"
+        bindtap="nextPeriod"
+      >›</text>
+    </view>
+  </view>
+
+  <scroll-view class="page-scroll" scroll-y>
+    <view class="summary-card">
+      <view class="summary-head">
+        <view class="category-icon-wrap">
+          <text class="category-emoji">{{categoryEmoji}}</text>
+        </view>
+        <view class="summary-head-info">
+          <text class="summary-title">{{categoryName}}</text>
+          <text class="summary-period">{{periodLabel}}</text>
+        </view>
+      </view>
+      <view class="summary-metrics">
+        <view class="metric-item">
+          <text class="metric-label">总{{statType === 'expense' ? '支出' : '收入'}}</text>
+          <text class="metric-value">{{totalDisplay}}</text>
+        </view>
+        <view class="metric-item">
+          <text class="metric-label">{{avgLabel}}</text>
+          <text class="metric-value metric-value--small">{{avgDisplay}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="chart-card">
+      <text class="chart-max">{{maxDisplay}}</text>
+      <canvas
+        type="2d"
+        id="detailLineChart"
+        class="line-chart"
+        bindtouchstart="onChartTouchStart"
+        bindtouchmove="onChartTouchMove"
+        bindtouchend="onChartTouchEnd"
+      ></canvas>
+      <view wx:if="{{recordCount === 0 && !loading}}" class="chart-empty">暂无数据</view>
+    </view>
+
+    <view class="chart-x-labels">
+      <text wx:for="{{xLabels}}" wx:key="index" class="x-label">{{item}}</text>
+    </view>
+
+    <view class="rank-section">
+      <view class="rank-head">
+        <text class="rank-title">{{statType === 'expense' ? '支出' : '收入'}}排行榜</text>
+        <view class="sort-tabs">
+          <view
+            wx:for="{{sortOptions}}"
+            wx:key="key"
+            class="sort-tab {{sortBy === item.key ? 'sort-tab--active' : ''}}"
+            bindtap="onSortChange"
+            data-key="{{item.key}}"
+          >
+            {{item.label}}
+          </view>
+        </view>
+      </view>
+
+      <view wx:if="{{loading}}" class="list-loading">
+        <text>加载中...</text>
+      </view>
+      <view wx:elif="{{recordList.length === 0}}" class="list-empty">
+        <text class="empty-icon">📭</text>
+        <text class="empty-text">当前分类暂无记录</text>
+      </view>
+      <view wx:else class="rank-list">
+        <view
+          wx:for="{{recordList}}"
+          wx:for-item="record"
+          wx:key="_id"
+          class="rank-item"
+          bindtap="onRecordTap"
+          data-id="{{record._id}}"
+          bindlongpress="onRecordLongPress"
+          data-record="{{record}}"
+          hover-class="rank-item--hover"
+        >
+          <view class="rank-item-left">
+            <view class="rank-icon-wrap">
+              <text class="rank-emoji">{{record.emoji}}</text>
+            </view>
+            <view class="rank-item-info">
+              <view class="rank-item-name-row">
+                <text class="rank-item-name">{{record.category_name}}</text>
+                <text class="rank-item-percent">{{record.percentDisplay}}%</text>
+              </view>
+              <view class="rank-bar-wrap">
+                <view class="rank-bar" style="width: {{record.barWidth}}%"></view>
+              </view>
+              <text class="rank-item-date">{{record.dateDisplay}}</text>
+              <text wx:if="{{record.note}}" class="rank-item-note">{{record.note}}</text>
+            </view>
+          </view>
+          <text class="rank-item-amount">{{record.amountDisplay}}</text>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>

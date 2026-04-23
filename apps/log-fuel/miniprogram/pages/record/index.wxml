@@ -1,0 +1,128 @@
+<view class="container">
+  <view class="custom-nav">
+    <view class="custom-nav-status" style="height: {{statusBarHeight}}px;"></view>
+    <view class="custom-nav-bar" style="height: {{navContentHeight}}px;">
+      <view class="custom-nav-side" style="width: {{capsuleSpace}}px;">
+        <view class="custom-nav-back" bindtap="onBack">
+          <text class="custom-nav-back-icon">‹</text>
+        </view>
+      </view>
+      <text class="custom-nav-title">{{pageTitle}}</text>
+      <view class="custom-nav-side" style="width: {{capsuleSpace}}px;"></view>
+    </view>
+  </view>
+
+  <view class="form-body">
+    <view class="section section--compact">
+      <view class="vehicle-card">
+        <text class="row-label">当前车辆 <text class="required">*</text></text>
+        <view wx:if="{{currentVehicle}}" class="vehicle-right">
+          <view class="vehicle-logo">车</view>
+          <text class="vehicle-text">{{currentVehicle.brand}} {{currentVehicle.model}}</text>
+        </view>
+        <text wx:else class="vehicle-text warn">未选择车辆</text>
+      </view>
+    </view>
+
+    <view class="section section--compact">
+      <picker mode="date" value="{{refuelDate}}" bindchange="onDateChange">
+        <view class="row-item">
+          <text class="row-label">加油日期</text>
+          <view class="row-right">
+            <text class="row-value">{{refuelDate}}</text>
+            <text class="row-arrow">›</text>
+          </view>
+        </view>
+      </picker>
+      <view class="divider"></view>
+      <picker mode="selector" range="{{fuelGrades}}" value="{{fuelGradeIndex}}" bindchange="onFuelGradeChange">
+        <view class="row-item">
+          <text class="row-label">油号</text>
+          <view class="row-right">
+            <text class="row-value">{{fuelGrade}}</text>
+            <text class="row-arrow">›</text>
+          </view>
+        </view>
+      </picker>
+    </view>
+
+    <view class="section section--amount">
+      <view class="amount-row">
+        <view class="amount-item">
+          <text class="amount-label">金额(元) <text class="required">*</text></text>
+          <view class="amount-input-wrap">
+            <input
+              class="amount-input"
+              type="digit"
+              value="{{totalAmount}}"
+              placeholder="0.00"
+              placeholder-class="amount-placeholder"
+              bindinput="onTotalAmountInput"
+            />
+          </view>
+        </view>
+        <text class="amount-eq">=</text>
+        <view class="amount-item">
+          <text class="amount-label">油量(L) <text class="required">*</text></text>
+          <view class="amount-input-wrap">
+            <input
+              class="amount-input"
+              type="digit"
+              value="{{liters}}"
+              placeholder="0.00"
+              placeholder-class="amount-placeholder"
+              bindinput="onLitersInput"
+            />
+          </view>
+        </view>
+        <text class="amount-eq">×</text>
+        <view class="amount-item">
+          <text class="amount-label">单价(元/L)</text>
+          <view class="amount-input-wrap">
+            <input
+              class="amount-input"
+              type="digit"
+              value="{{unitPrice}}"
+              placeholder="0.00"
+              placeholder-class="amount-placeholder"
+              bindinput="onUnitPriceInput"
+            />
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="section section--field">
+      <view class="odometer-block">
+        <view class="field-head">
+          <text class="row-label">车辆总里程(km) <text class="required">*</text></text>
+          <text wx:if="{{lastOdometer}}" class="field-hint">上次 {{lastOdometer}} km</text>
+        </view>
+        <view class="odometer-input-wrap">
+          <input
+            class="odometer-input"
+            type="number"
+            value="{{odometer}}"
+            placeholder="请输入当前总里程"
+            placeholder-class="odometer-placeholder"
+            bindinput="onOdometerInput"
+          />
+        </view>
+      </view>
+    </view>
+
+    <view class="section section--field">
+      <text class="row-label">是否加满跳枪 <text class="required">*</text></text>
+      <view class="segment-control">
+        <view class="segment-item {{tankFull ? 'active' : ''}}" bindtap="onTankFullChange" data-value="0">已跳枪</view>
+        <view class="segment-item {{!tankFull ? 'active' : ''}}" bindtap="onTankFullChange" data-value="1">未跳枪</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="footer-bar">
+    <view class="btn-save {{loading ? 'disabled' : ''}}" bindtap="onSave">
+      <text>{{loading ? '保存中...' : '保存'}}</text>
+    </view>
+  </view>
+</view>

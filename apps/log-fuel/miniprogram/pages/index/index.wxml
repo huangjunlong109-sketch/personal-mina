@@ -1,0 +1,190 @@
+<view class="container">
+  <view class="vehicle-bar" bindtap="showVehiclePicker">
+    <view wx:if="{{initialLoading}}" class="vehicle-info">
+      <view class="skeleton-box sk-name"></view>
+      <view class="skeleton-box sk-plate"></view>
+    </view>
+    <view wx:elif="{{currentVehicle}}" class="vehicle-info">
+      <text class="vehicle-name">{{currentVehicle.brand}} {{currentVehicle.model}}</text>
+      <text wx:if="{{currentVehicle.plate}}" class="vehicle-plate">{{currentVehicle.plate}}</text>
+    </view>
+    <view wx:else class="vehicle-empty">
+      <text>请先到「我的」添加车辆 ›</text>
+    </view>
+  </view>
+
+  <view class="kpi-section">
+    <block wx:if="{{initialLoading}}">
+      <view class="kpi-row">
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <view class="skeleton-box sk-kpi-num"></view>
+            <view class="skeleton-box sk-kpi-unit"></view>
+          </view>
+          <view class="skeleton-box sk-kpi-label"></view>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <view class="skeleton-box sk-kpi-num"></view>
+            <view class="skeleton-box sk-kpi-unit"></view>
+          </view>
+          <view class="skeleton-box sk-kpi-label"></view>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <view class="skeleton-box sk-kpi-num"></view>
+            <view class="skeleton-box sk-kpi-unit sk-kpi-unit-short"></view>
+          </view>
+          <view class="skeleton-box sk-kpi-label"></view>
+        </view>
+      </view>
+      <view class="kpi-row kpi-row-2">
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <view class="skeleton-box sk-kpi-num sk-kpi-num-wide"></view>
+            <view class="skeleton-box sk-kpi-unit sk-kpi-unit-short"></view>
+          </view>
+          <view class="skeleton-box sk-kpi-label"></view>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <view class="skeleton-box sk-kpi-num sk-kpi-num-wide"></view>
+            <view class="skeleton-box sk-kpi-unit sk-kpi-unit-short"></view>
+          </view>
+          <view class="skeleton-box sk-kpi-label"></view>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <view class="skeleton-box sk-kpi-num"></view>
+            <view class="skeleton-box sk-kpi-unit sk-kpi-unit-short"></view>
+          </view>
+          <view class="skeleton-box sk-kpi-label"></view>
+        </view>
+      </view>
+    </block>
+    <block wx:else>
+      <view class="kpi-row">
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <text class="kpi-num">{{stats.latestConsumption || '--'}}</text>
+            <text class="kpi-unit"> L/100km</text>
+          </view>
+          <text class="kpi-label">最新油耗</text>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <text class="kpi-num">{{stats.avgConsumption || '--'}}</text>
+            <text class="kpi-unit"> L/100km</text>
+          </view>
+          <text class="kpi-label">平均油耗</text>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <text class="kpi-num">{{stats.dailyMileage || '--'}}</text>
+            <text class="kpi-unit"> km</text>
+          </view>
+          <text class="kpi-label">日均里程</text>
+        </view>
+      </view>
+      <view class="kpi-row kpi-row-2">
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <text class="kpi-num">{{stats.totalLiters || '--'}}</text>
+            <text class="kpi-unit"> L</text>
+          </view>
+          <text class="kpi-label">累计加油</text>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <text class="kpi-num">{{stats.totalAmount || '--'}}</text>
+            <text class="kpi-unit"> 元</text>
+          </view>
+          <text class="kpi-label">累计油费</text>
+        </view>
+        <view class="kpi-divider"></view>
+        <view class="kpi-item">
+          <view class="kpi-value">
+            <text class="kpi-num">{{stats.monthlyAvgAmount || '--'}}</text>
+            <text class="kpi-unit"> 元</text>
+          </view>
+          <text class="kpi-label">月均油费</text>
+        </view>
+      </view>
+      <view wx:if="{{stats.issueCount > 0}}" class="issue-tip">
+        <text>⚠️ 含 {{stats.issueCount}} 条待核实记录，请到历史记录检查</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="chart-section {{chartTransitioning ? 'chart-section--transitioning' : ''}}">
+    <view class="chart-header">
+      <view class="chart-tabs">
+        <view class="chart-tab {{chartTab === 'consumption' ? 'active' : ''}}" bindtap="switchChartTab" data-tab="consumption">油耗</view>
+        <view class="chart-tab {{chartTab === 'cost' ? 'active' : ''}}" bindtap="switchChartTab" data-tab="cost">油费</view>
+      </view>
+      <view wx:if="{{initialLoading}}" class="skeleton-box sk-chart-meta"></view>
+      <text wx:else class="chart-meta">{{chartMetaText}}</text>
+    </view>
+    <view class="chart-body">
+      <view wx:if="{{initialLoading}}" class="chart-skeleton">
+        <view class="chart-skeleton-grid">
+          <view class="chart-skeleton-line"></view>
+          <view class="chart-skeleton-line"></view>
+          <view class="chart-skeleton-line"></view>
+        </view>
+        <view class="chart-skeleton-axis">
+          <view class="skeleton-box sk-axis-label"></view>
+          <view class="skeleton-box sk-axis-label"></view>
+          <view class="skeleton-box sk-axis-label"></view>
+          <view class="skeleton-box sk-axis-label"></view>
+        </view>
+        <view class="chart-legend chart-legend-skeleton">
+          <view class="legend-item">
+            <view class="skeleton-box sk-legend-icon"></view>
+            <view class="skeleton-box sk-legend-text"></view>
+          </view>
+          <view class="legend-item">
+            <view class="skeleton-box sk-legend-dash"></view>
+            <view class="skeleton-box sk-legend-text"></view>
+          </view>
+        </view>
+      </view>
+      <block wx:else>
+        <view class="chart-canvas-wrap">
+          <canvas type="2d" id="lineChart" class="chart-canvas"></canvas>
+          <view wx:if="{{chartTransitioning || (loading && chartReady)}}" class="chart-mask">
+            <view class="chart-mask-dot"></view>
+          </view>
+          <view wx:if="{{loading && !chartReady}}" class="chart-empty">
+            <text class="chart-empty-text">图表加载中...</text>
+          </view>
+          <view wx:elif="{{!chartReady}}" class="chart-empty">
+            <text class="chart-empty-text">{{chartEmptyText}}</text>
+          </view>
+        </view>
+        <view wx:if="{{chartReady}}" class="chart-legend">
+          <view class="legend-item">
+            <view class="legend-dot"></view>
+            <text class="legend-text">{{chartLegendPrimary}}</text>
+          </view>
+          <view class="legend-item">
+            <view class="legend-dash"></view>
+            <text class="legend-text">{{chartLegendSecondary}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="action-section">
+    <view class="btn-outline" bindtap="goHistory">历史记录</view>
+    <view class="btn-primary" bindtap="goRecord">记油耗</view>
+  </view>
+</view>

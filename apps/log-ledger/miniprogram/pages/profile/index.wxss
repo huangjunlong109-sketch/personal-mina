@@ -1,0 +1,106 @@
+.profile-page {
+  display: flex;
+  flex-direction: column;
+  background: #F5F5F5;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.profile-scroll {
+  flex: 1;
+  min-height: 0;
+  box-sizing: border-box;
+  padding-bottom: calc(100rpx + env(safe-area-inset-bottom));
+}
+
+/* 用户卡片 */
+.user-card {
+  flex-shrink: 0;
+  background: #FFD000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 30rpx 48rpx;
+  gap: 20rpx;
+}
+
+.user-avatar {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  border: 4rpx solid rgba(255,255,255,0.6);
+  background: #fff;
+}
+
+.user-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+/* 分组 */
+.section {
+  margin: 24rpx 24rpx 0;
+}
+
+.section-title {
+  font-size: 24rpx;
+  color: #999999;
+  padding: 0 8rpx 12rpx;
+  display: block;
+}
+
+/* 菜单卡片 */
+.menu-card {
+  background: #FFFFFF;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 30rpx 24rpx;
+  gap: 16rpx;
+}
+
+.menu-icon {
+  font-size: 36rpx;
+  width: 44rpx;
+  text-align: center;
+}
+
+.menu-label {
+  flex: 1;
+  font-size: 30rpx;
+  color: #333333;
+}
+
+.menu-value {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.menu-arrow {
+  font-size: 36rpx;
+  color: #CCCCCC;
+}
+
+.menu-right {
+  display: flex;
+  align-items: center;
+}
+
+.menu-picker-val {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  color: #999999;
+  font-size: 28rpx;
+}
+
+.menu-divider {
+  height: 1rpx;
+  background: #F5F5F5;
+  margin-left: 76rpx;
+}

@@ -1,0 +1,93 @@
+<view class="record-page">
+  <!-- 类型切换 Tab -->
+  <view class="type-tabs">
+    <view
+      class="type-tab {{currentType === 'expense' ? 'type-tab--active' : ''}}"
+      bindtap="switchType"
+      data-type="expense"
+    >支出</view>
+    <view
+      class="type-tab {{currentType === 'income' ? 'type-tab--active' : ''}}"
+      bindtap="switchType"
+      data-type="income"
+    >收入</view>
+    <view class="type-cancel" bindtap="goBack">取消</view>
+  </view>
+
+  <!-- 分类网格 -->
+  <scroll-view class="category-scroll" scroll-y>
+    <view class="category-grid">
+      <view
+        wx:for="{{categories}}"
+        wx:key="_id"
+        class="category-item {{selectedCategoryId === item._id ? 'category-item--active' : ''}}"
+        bindtap="selectCategory"
+        data-item="{{item}}"
+      >
+        <view class="category-icon-wrap {{selectedCategoryId === item._id ? 'category-icon-wrap--active' : ''}}">
+          <text class="category-emoji">{{item.emoji}}</text>
+        </view>
+        <text class="category-name">{{item.name}}</text>
+      </view>
+      <!-- 设置入口 -->
+      <view class="category-item" bindtap="goCategory">
+        <view class="category-icon-wrap">
+          <text class="category-emoji">⚙️</text>
+        </view>
+        <text class="category-name">设置</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 金额 + 备注区 -->
+  <view class="amount-area">
+    <view class="amount-note-row">
+      <input
+        class="note-input"
+        placeholder="备注：点击填写备注"
+        placeholder-class="note-placeholder"
+        value="{{note}}"
+        bindinput="onNoteInput"
+        maxlength="100"
+      />
+      <text class="amount-display">{{amountDisplay}}</text>
+    </view>
+  </view>
+
+  <!-- 数字键盘 -->
+  <view class="keyboard">
+    <view class="keyboard-row">
+      <view class="key" bindtap="onKey" data-key="7">7</view>
+      <view class="key" bindtap="onKey" data-key="8">8</view>
+      <view class="key" bindtap="onKey" data-key="9">9</view>
+      <picker class="key-picker" mode="date" value="{{recordDate}}" bindchange="onDateChange">
+        <view class="key key-func key-date">
+          <text class="key-date-icon">📅</text>
+          <text class="key-date-text">{{dateDisplay}}</text>
+        </view>
+      </picker>
+    </view>
+    <view class="keyboard-row">
+      <view class="key" bindtap="onKey" data-key="4">4</view>
+      <view class="key" bindtap="onKey" data-key="5">5</view>
+      <view class="key" bindtap="onKey" data-key="6">6</view>
+      <view class="key key-func" bindtap="onKey" data-key="+">+</view>
+    </view>
+    <view class="keyboard-row">
+      <view class="key" bindtap="onKey" data-key="1">1</view>
+      <view class="key" bindtap="onKey" data-key="2">2</view>
+      <view class="key" bindtap="onKey" data-key="3">3</view>
+      <view class="key key-func" bindtap="onKey" data-key="-">-</view>
+    </view>
+    <view class="keyboard-row">
+      <view class="key" bindtap="onKey" data-key=".">.</view>
+      <view class="key" bindtap="onKey" data-key="0">0</view>
+      <view class="key key-func" bindtap="onKey" data-key="del">⌫</view>
+      <view
+        class="key key-done {{actionEnabled ? 'key-done--active' : ''}}"
+        bindtap="onActionButton"
+      >{{pendingOperator ? '=' : '完成'}}</view>
+    </view>
+  </view>
+
+</view>

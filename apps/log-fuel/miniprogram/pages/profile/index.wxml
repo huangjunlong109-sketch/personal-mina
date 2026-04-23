@@ -1,0 +1,50 @@
+<view class="container">
+  <view class="section">
+    <view wx:if="{{currentVehicle}}" class="current-vehicle" bindtap="showVehiclePicker">
+      <text class="vehicle-icon">🚗</text>
+      <view class="vehicle-info">
+        <text class="vehicle-name">{{currentVehicle.brand}} {{currentVehicle.model}}</text>
+        <text wx:if="{{currentVehicle.plate}}" class="vehicle-plate">{{currentVehicle.plate}}</text>
+      </view>
+      <text class="vehicle-check">✓</text>
+    </view>
+    <view wx:else class="no-vehicle">
+      <text class="no-vehicle-text">尚未添加车辆</text>
+      <view class="btn-add" bindtap="goAddVehicle">+ 添加车辆</view>
+    </view>
+  </view>
+
+  <view class="section">
+    <view class="menu-item" bindtap="showVehiclePicker">
+      <text class="menu-icon">🚗</text>
+      <text class="menu-text">我的车库</text>
+      <text class="menu-arrow">›</text>
+    </view>
+    <view class="divider"></view>
+    <view class="menu-item" bindtap="goImport">
+      <text class="menu-icon">📥</text>
+      <text class="menu-text">导入油耗记录</text>
+      <text class="menu-arrow">›</text>
+    </view>
+  </view>
+
+  <!-- 车库弹层 -->
+  <view wx:if="{{showPicker}}" class="mask" bindtap="hideVehiclePicker"></view>
+  <view class="sheet {{showPicker ? 'show' : ''}}">
+    <view class="sheet-header">
+      <text class="sheet-title">我的车库</text>
+      <text class="sheet-close" bindtap="hideVehiclePicker">×</text>
+    </view>
+    <view wx:for="{{vehicles}}" wx:key="_id" class="sheet-item">
+      <view class="sheet-item-main" bindtap="selectVehicle" data-id="{{item._id}}">
+        <text class="sheet-icon">🚗</text>
+        <view class="sheet-info">
+          <text class="sheet-name">{{item.brand}} {{item.model}}</text>
+          <text wx:if="{{item.plate}}" class="sheet-plate">{{item.plate}}</text>
+        </view>
+        <text wx:if="{{currentVehicle && currentVehicle._id === item._id}}" class="sheet-check">✓</text>
+      </view>
+    </view>
+    <view class="sheet-add" bindtap="goAddVehicle">+ 添加新车</view>
+  </view>
+</view>

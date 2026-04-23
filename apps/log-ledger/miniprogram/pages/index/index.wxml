@@ -1,0 +1,168 @@
+<view class="index-page">
+  <!-- 顶部 Header（黄色区域）-->
+  <view class="header" style="padding-top: {{statusBarHeight}}px">
+    <view class="header-title">
+      <text class="header-app-name">LoG记账</text>
+    </view>
+    <view class="header-date-summary">
+      <view class="header-date-col" bindtap="openMonthPicker">
+        <text class="header-year-small">{{currentYear}}年</text>
+        <view class="header-month-nav">
+          <view class="month-arrow" catchtap="prevMonth">‹</view>
+          <view class="header-month-center">
+            <text class="header-month-big">{{currentMonthPadded}}月</text>
+            <text class="header-month-delta">▼</text>
+          </view>
+          <view class="month-arrow" catchtap="nextMonth">›</view>
+        </view>
+      </view>
+      <view class="header-summary header-summary--inline">
+        <view class="summary-item">
+          <text class="summary-label">收入</text>
+          <text class="summary-value">{{totalIncomeDisplay}}</text>
+        </view>
+        <view class="summary-divider"></view>
+        <view class="summary-item">
+          <text class="summary-label">支出</text>
+          <text class="summary-value">{{totalExpenseDisplay}}</text>
+        </view>
+      </view>
+    </view>
+    <!-- 快捷功能栏 -->
+    <view class="shortcut-bar">
+      <view class="shortcut-item" bindtap="goBill">
+        <text class="shortcut-icon">📋</text>
+        <text class="shortcut-text">账单</text>
+      </view>
+      <view class="shortcut-item">
+        <text class="shortcut-icon">📊</text>
+        <text class="shortcut-text">预算</text>
+      </view>
+      <view class="shortcut-item">
+        <text class="shortcut-icon">🏦</text>
+        <text class="shortcut-text">资产管家</text>
+      </view>
+      <view class="shortcut-item">
+        <text class="shortcut-icon">🛍️</text>
+        <text class="shortcut-text">购物返现</text>
+      </view>
+      <view class="shortcut-item">
+        <text class="shortcut-icon">···</text>
+        <text class="shortcut-text">更多</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 账单列表 -->
+  <scroll-view class="record-list" scroll-y scroll-top="{{listScrollTop}}" upper-threshold="80" lower-threshold="120" bindscrolltoupper="handleScrollToUpper" bindscrolltolower="handleScrollToLower" refresher-enabled bindrefresherrefresh="onRefresh" refresher-triggered="{{refreshing}}">
+    <view wx:if="{{loading}}" class="list-loading">
+      <view class="skeleton-day-group">
+        <view class="skeleton-day-header">
+          <view class="skeleton skeleton-text skeleton-day-date"></view>
+          <view class="skeleton skeleton-text skeleton-day-total"></view>
+        </view>
+        <view class="record-card">
+          <view class="record-item">
+            <view class="record-icon-wrap skeleton skeleton-circle"></view>
+            <view class="record-info">
+              <view class="skeleton skeleton-text skeleton-record-title"></view>
+              <view class="skeleton skeleton-text skeleton-record-note"></view>
+            </view>
+            <view class="skeleton skeleton-text skeleton-record-amount"></view>
+          </view>
+          <view class="record-item">
+            <view class="record-icon-wrap skeleton skeleton-circle"></view>
+            <view class="record-info">
+              <view class="skeleton skeleton-text skeleton-record-title skeleton-record-title--short"></view>
+              <view class="skeleton skeleton-text skeleton-record-note skeleton-record-note--short"></view>
+            </view>
+            <view class="skeleton skeleton-text skeleton-record-amount skeleton-record-amount--short"></view>
+          </view>
+        </view>
+      </view>
+      <view class="skeleton-day-group">
+        <view class="skeleton-day-header">
+          <view class="skeleton skeleton-text skeleton-day-date skeleton-day-date--short"></view>
+          <view class="skeleton skeleton-text skeleton-day-total"></view>
+        </view>
+        <view class="record-card">
+          <view class="record-item">
+            <view class="record-icon-wrap skeleton skeleton-circle"></view>
+            <view class="record-info">
+              <view class="skeleton skeleton-text skeleton-record-title"></view>
+              <view class="skeleton skeleton-text skeleton-record-note"></view>
+            </view>
+            <view class="skeleton skeleton-text skeleton-record-amount"></view>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view wx:elif="{{groupedList.length === 0}}" class="list-empty">
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">本账期还没有记录</text>
+      <text class="empty-hint">点击底部 + 开始记账</text>
+    </view>
+    <view wx:else>
+      <view wx:for="{{groupedList}}" wx:key="date" class="day-group">
+        <!-- 日期分组标题 -->
+        <view class="day-header">
+          <text class="day-date">{{item.dateDisplay}}</text>
+          <text class="day-total">支出: {{item.expenseDisplay}}</text>
+        </view>
+        <!-- 当日记录 -->
+        <view class="record-card">
+          <view
+            wx:for="{{item.records}}"
+            wx:for-item="record"
+            wx:key="_id"
+            class="record-item"
+            bindtap="onRecordTap"
+            data-id="{{record._id}}"
+            bindlongpress="onRecordLongPress"
+            data-record="{{record}}"
+          >
+            <view class="record-icon-wrap">
+              <text class="record-emoji">{{record.emoji}}</text>
+            </view>
+            <view class="record-info">
+              <text class="record-category">{{record.category_name}}</text>
+              <text wx:if="{{record.note}}" class="record-note">{{record.note}}</text>
+            </view>
+            <view class="record-amount {{record.type === 'income' ? 'record-amount--income' : ''}}">
+              {{record.type === 'expense' ? '-' : '+'}}{{record.amountDisplay}}
+            </view>
+          </view>
+        </view>
+      </view>
+      <view wx:if="{{loadingMore}}" class="list-footer">
+        <text class="list-footer-text">加载中...</text>
+      </view>
+      <view wx:elif="{{!hasMore}}" class="list-footer list-footer--switch" bindtap="onFooterPrevMonth">
+        <text class="list-footer-text">数据已加载完，点击看上一个月</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{showMonthPicker}}" class="month-mask" bindtap="closeMonthPicker">
+    <view class="month-sheet" catchtap="noop">
+      <view class="month-sheet-bar">
+        <text class="month-sheet-btn" bindtap="closeMonthPicker">取消</text>
+        <text class="month-sheet-title">选择月份</text>
+        <text class="month-sheet-btn month-sheet-btn--primary" bindtap="confirmMonthPicker">确定</text>
+      </view>
+      <picker-view
+        class="month-picker-view"
+        indicator-class="month-picker-indicator"
+        value="{{pickerValue}}"
+        bindchange="onPickerViewChange"
+      >
+        <picker-view-column>
+          <view wx:for="{{pickerYears}}" wx:key="*this" class="month-picker-item">{{item}}年</view>
+        </picker-view-column>
+        <picker-view-column>
+          <view wx:for="{{pickerMonths}}" wx:key="*this" class="month-picker-item">{{item}}月</view>
+        </picker-view-column>
+      </picker-view>
+    </view>
+  </view>
+</view>

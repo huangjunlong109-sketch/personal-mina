@@ -1,0 +1,123 @@
+<view class="category-page">
+  <!-- 类型切换 -->
+  <view class="type-tabs">
+    <view
+      class="type-tab {{currentType === 'expense' ? 'type-tab--active' : ''}}"
+      bindtap="switchType"
+      data-type="expense"
+    >支出</view>
+    <view
+      class="type-tab {{currentType === 'income' ? 'type-tab--active' : ''}}"
+      bindtap="switchType"
+      data-type="income"
+    >收入</view>
+  </view>
+
+  <scroll-view scroll-y class="cat-scroll">
+    <!-- 已显示分类 -->
+    <view class="section-header">
+      <text class="section-title">已显示（{{visibleList.length}}）</text>
+    </view>
+    <view class="cat-grid">
+      <view
+        wx:for="{{visibleList}}"
+        wx:key="_id"
+        class="cat-item {{item.is_builtin ? '' : 'cat-item--tap'}}"
+        bindtap="onCatItemTap"
+        data-id="{{item._id}}"
+        data-name="{{item.name}}"
+        data-icon="{{item.icon}}"
+        data-builtin="{{item.is_builtin}}"
+      >
+        <view class="cat-icon-wrap">
+          <text class="cat-emoji">{{item.emoji}}</text>
+        </view>
+        <text class="cat-name">{{item.name}}</text>
+        <view
+          class="cat-hide-btn"
+          catchtap="hideCategory"
+          data-id="{{item._id}}"
+        >−</view>
+      </view>
+      <!-- 新增按钮 -->
+      <view class="cat-item cat-add" bindtap="showAddModal">
+        <view class="cat-icon-wrap cat-icon-add">
+          <text class="cat-add-plus">+</text>
+        </view>
+        <text class="cat-name">添加</text>
+      </view>
+    </view>
+
+    <!-- 已隐藏分类 -->
+    <view wx:if="{{hiddenList.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">已隐藏（{{hiddenList.length}}）</text>
+      </view>
+      <view class="cat-grid">
+        <view
+          wx:for="{{hiddenList}}"
+          wx:key="_id"
+          class="cat-item cat-item--hidden {{item.is_builtin ? '' : 'cat-item--tap'}}"
+          bindtap="onCatItemTap"
+          data-id="{{item._id}}"
+          data-name="{{item.name}}"
+          data-icon="{{item.icon}}"
+          data-builtin="{{item.is_builtin}}"
+        >
+          <view class="cat-icon-wrap">
+            <text class="cat-emoji">{{item.emoji}}</text>
+          </view>
+          <text class="cat-name">{{item.name}}</text>
+          <view
+            class="cat-show-btn"
+            catchtap="showCategory"
+            data-id="{{item._id}}"
+          >+</view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 新增 / 编辑弹窗 -->
+  <view wx:if="{{showModal}}" class="modal-mask" catchtap="hideAddModal">
+    <view class="modal-box modal-box--tall" catchtap="stopModalBubble">
+      <text class="modal-title">{{isEditMode ? '编辑分类' : '新增自定义分类'}}</text>
+      <input
+        class="modal-input"
+        placeholder="分类名称（最多6字）"
+        value="{{newCatName}}"
+        bindinput="onNewNameInput"
+        maxlength="6"
+        focus="{{showModal}}"
+        catchtap="stopModalBubble"
+      />
+      <text class="modal-label">图标（按用途分组）</text>
+      <scroll-view
+        scroll-y
+        class="modal-icon-scroll"
+        show-scrollbar="{{false}}"
+        catchtap="stopModalBubble"
+      >
+        <view wx:for="{{iconPickerGroups}}" wx:key="id" class="modal-icon-group">
+          <text class="modal-group-title">{{item.label}}</text>
+          <view class="modal-icon-grid">
+            <view
+              wx:for="{{item.icons}}"
+              wx:for-item="ico"
+              wx:key="key"
+              class="modal-icon-item {{newCatIcon === ico.key ? 'modal-icon-item--active' : ''}}"
+              catchtap="pickIcon"
+              data-key="{{ico.key}}"
+            >
+              <text class="modal-icon-emoji">{{ico.emoji}}</text>
+            </view>
+          </view>
+        </view>
+      </scroll-view>
+      <view class="modal-btns" catchtap="stopModalBubble">
+        <view class="modal-btn modal-btn-cancel" catchtap="hideAddModal">取消</view>
+        <view class="modal-btn modal-btn-confirm" catchtap="saveCategory">{{isEditMode ? '保存' : '确定'}}</view>
+      </view>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,21 @@
+<view class="container">
+  <view class="section">
+    <view class="field">
+      <text class="label">品牌 <text class="req">*</text></text>
+      <input class="input" value="{{brand}}" placeholder="如：丰田" bindinput="onBrandInput" />
+    </view>
+    <view class="divider"></view>
+    <view class="field">
+      <text class="label">车型 <text class="req">*</text></text>
+      <input class="input" value="{{model}}" placeholder="如：亚洲龙" bindinput="onModelInput" />
+    </view>
+    <view class="divider"></view>
+    <view class="field">
+      <text class="label">车牌</text>
+      <input class="input" value="{{plate}}" placeholder="如：粤V955M9（选填）" bindinput="onPlateInput" />
+    </view>
+  </view>
+  <view class="btn-save {{loading ? 'disabled' : ''}}" bindtap="onSave">
+    <text>{{loading ? '保存中...' : '保存'}}</text>
+  </view>
+</view>

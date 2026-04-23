@@ -1,0 +1,41 @@
+<view class="tab-bar">
+  <!-- 明细 -->
+  <view class="tab-item {{selected === 0 ? 'active' : ''}}" bindtap="switchTab" data-index="0" data-url="/pages/index/index">
+    <view class="tab-icon">
+      <view class="icon-ledger {{selected === 0 ? 'icon-active' : ''}}"></view>
+    </view>
+    <text class="tab-label">明细</text>
+  </view>
+
+  <!-- 图表 -->
+  <view class="tab-item {{selected === 1 ? 'active' : ''}}" bindtap="switchTab" data-index="1" data-url="/pages/chart/index">
+    <view class="tab-icon">
+      <view class="icon-chart {{selected === 1 ? 'icon-active' : ''}}"></view>
+    </view>
+    <text class="tab-label">图表</text>
+  </view>
+
+  <!-- 记账（中间突出按钮）-->
+  <view class="tab-item tab-center" bindtap="goRecord">
+    <view class="tab-add-btn">
+      <text class="tab-add-plus">+</text>
+    </view>
+    <text class="tab-label tab-label-center">记账</text>
+  </view>
+
+  <!-- 账单 -->
+  <view class="tab-item {{selected === 2 ? 'active' : ''}}" bindtap="switchTab" data-index="2" data-url="/pages/bill/index">
+    <view class="tab-icon">
+      <view class="icon-bill {{selected === 2 ? 'icon-active' : ''}}"></view>
+    </view>
+    <text class="tab-label">账单</text>
+  </view>
+
+  <!-- 我的 -->
+  <view class="tab-item {{selected === 3 ? 'active' : ''}}" bindtap="switchTab" data-index="3" data-url="/pages/profile/index">
+    <view class="tab-icon">
+      <view class="icon-profile {{selected === 3 ? 'icon-active' : ''}}"></view>
+    </view>
+    <text class="tab-label">我的</text>
+  </view>
+</view>

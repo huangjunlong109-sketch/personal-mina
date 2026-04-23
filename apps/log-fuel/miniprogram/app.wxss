@@ -1,0 +1,20 @@
+page {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'PingFang SC', sans-serif;
+  background-color: #F4F5F9;
+  color: #1C1C3A;
+  --color-primary: #6B7FC2;
+  --color-primary-dark: #5A6CA8;
+  --color-header-bg: #8090C0;
+  --color-bg: #F4F5F9;
+  --color-card: #FFFFFF;
+  --color-border: #EBEBF0;
+  --color-text: #1C1C3A;
+  --color-text-secondary: #8C8CA0;
+  --color-white: #FFFFFF;
+  --color-warning: #FF9500;
+  --color-success: #34C759;
+  --color-danger: #FF3B30;
+  --radius-card: 16rpx;
+  --radius-btn: 56rpx;
+}

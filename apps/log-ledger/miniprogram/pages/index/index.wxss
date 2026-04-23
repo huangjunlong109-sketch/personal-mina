@@ -1,0 +1,431 @@
+.index-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #F5F5F5;
+}
+
+/* Header */
+.header {
+  background: #FFD000;
+  padding: 0 30rpx 0rpx;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0 8rpx;
+}
+
+.header-app-name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #333333;
+}
+
+.header-date-summary {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20rpx;
+  margin-bottom: 16rpx;
+}
+
+.header-date-col {
+  flex-shrink: 0;
+  min-width: 200rpx;
+}
+
+.header-year-small {
+  display: block;
+  font-size: 20rpx;
+  line-height: 1.1;
+  color: rgba(0, 0, 0, 0.55);
+  margin-bottom: 4rpx;
+}
+
+.header-month-nav {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.header-month-center {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6rpx;
+}
+
+.month-arrow {
+  width: 40rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.header-month-big {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #333333;
+  line-height: 1;
+}
+
+.header-month-delta {
+  font-size: 18rpx;
+  color: rgba(0, 0, 0, 0.45);
+  padding-top: 4rpx;
+}
+
+.header-summary {
+  display: flex;
+  align-items: center;
+  gap: 28rpx;
+  margin-bottom: 24rpx;
+}
+
+.header-summary--inline {
+  margin-bottom: 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2rpx;
+}
+
+.summary-label {
+  font-size: 22rpx;
+  color: rgba(0,0,0,0.5);
+}
+
+.summary-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+  line-height: 1.15;
+}
+
+.summary-divider {
+  width: 1rpx;
+  height: 42rpx;
+  background: rgba(0,0,0,0.15);
+}
+
+/* 快捷功能栏 */
+.shortcut-bar {
+  background: #FFFFFF;
+  border-radius: 20rpx 20rpx 0 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 24rpx 0 20rpx;
+}
+
+.shortcut-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.shortcut-icon {
+  font-size: 36rpx;
+}
+
+.shortcut-text {
+  font-size: 20rpx;
+  color: #666666;
+}
+
+/* 账单列表 */
+.record-list {
+  flex: 1;
+  overflow: hidden;
+  background: #F5F5F5;
+  padding-bottom: calc(160rpx + env(safe-area-inset-bottom));
+}
+
+/* 加载 & 空态 */
+.list-loading {
+  padding: 24rpx 20rpx 40rpx;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #F1F3F5 25%, #E7EAEE 37%, #F1F3F5 63%);
+  background-size: 400% 100%;
+  animation: skeleton-loading 1.2s ease-in-out infinite;
+}
+
+.skeleton-text {
+  border-radius: 999rpx;
+}
+
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+.skeleton-day-group {
+  margin-bottom: 16rpx;
+}
+
+.skeleton-day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 10rpx 10rpx;
+}
+
+.skeleton-day-date {
+  width: 180rpx;
+  height: 28rpx;
+}
+
+.skeleton-day-date--short {
+  width: 140rpx;
+}
+
+.skeleton-day-total {
+  width: 150rpx;
+  height: 24rpx;
+}
+
+.skeleton-record-title {
+  width: 180rpx;
+  height: 28rpx;
+}
+
+.skeleton-record-title--short {
+  width: 120rpx;
+}
+
+.skeleton-record-note {
+  width: 220rpx;
+  height: 22rpx;
+}
+
+.skeleton-record-note--short {
+  width: 160rpx;
+}
+
+.skeleton-record-amount {
+  width: 110rpx;
+  height: 28rpx;
+}
+
+.skeleton-record-amount--short {
+  width: 90rpx;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.list-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 100rpx 0;
+  gap: 16rpx;
+}
+
+.empty-icon {
+  font-size: 80rpx;
+}
+
+.empty-text {
+  font-size: 30rpx;
+  color: #999999;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  color: #BBBBBB;
+}
+
+.list-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 12rpx 0;
+}
+
+.list-footer--switch {
+  min-height: 96rpx;
+}
+
+.list-footer-text {
+  font-size: 24rpx;
+  color: #999999;
+  text-align: center;
+}
+
+/* 日期分组 */
+.day-group {
+  margin-bottom: 16rpx;
+}
+
+.day-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16rpx 30rpx 10rpx;
+}
+
+.day-date {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.day-total {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+/* 记录卡片 */
+.record-card {
+  background: #FFFFFF;
+  margin: 0 20rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.record-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 24rpx;
+  gap: 20rpx;
+  border-bottom: 1rpx solid #F5F5F5;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.record-icon-wrap {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.record-emoji {
+  font-size: 36rpx;
+}
+
+.record-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 72rpx;
+  gap: 6rpx;
+}
+
+.record-category {
+  font-size: 30rpx;
+  color: #333333;
+  line-height: 1.2;
+}
+
+.record-note {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.record-amount {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  font-size: 32rpx;
+  color: #333333;
+  font-weight: 500;
+  line-height: 1;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.record-amount--income {
+  color: #07C160;
+}
+
+/* 底部选择月份（鲨鱼式双列） */
+.month-mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.month-sheet {
+  background: #ffffff;
+  border-radius: 24rpx 24rpx 0 0;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.month-sheet-bar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 32rpx;
+  border-bottom: 1rpx solid #eeeeee;
+}
+
+.month-sheet-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.month-sheet-btn {
+  font-size: 28rpx;
+  color: #666666;
+  padding: 8rpx 16rpx;
+}
+
+.month-sheet-btn--primary {
+  color: #333333;
+  font-weight: 600;
+}
+
+.month-picker-view {
+  width: 100%;
+  height: 440rpx;
+}
+
+.month-picker-item {
+  line-height: 88rpx;
+  text-align: center;
+  font-size: 32rpx;
+  color: #333333;
+}
+
+.month-picker-indicator {
+  height: 88rpx;
+  border-top: 1rpx solid #e8e8e8;
+  border-bottom: 1rpx solid #e8e8e8;
+}

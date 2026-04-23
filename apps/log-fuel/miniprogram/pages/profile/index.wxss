@@ -1,0 +1,36 @@
+.container {
+  box-sizing: border-box;
+  background: #F4F5F9;
+  min-height: 100vh;
+  padding-bottom: calc(112rpx + env(safe-area-inset-bottom));
+  padding-bottom: calc(112rpx + constant(safe-area-inset-bottom));
+}
+.section { background: #FFFFFF; border-radius: 20rpx; margin: 20rpx 24rpx; overflow: hidden; }
+.current-vehicle { display: flex; align-items: center; padding: 32rpx 28rpx; gap: 20rpx; }
+.vehicle-icon { font-size: 56rpx; }
+.vehicle-info { flex: 1; }
+.vehicle-name { font-size: 32rpx; font-weight: 700; color: #1C1C3A; display: block; }
+.vehicle-plate { font-size: 24rpx; color: #8C8CA0; margin-top: 6rpx; display: block; }
+.vehicle-check { color: #6B7FC2; font-size: 36rpx; font-weight: 700; }
+.no-vehicle { padding: 36rpx 28rpx; display: flex; align-items: center; justify-content: space-between; }
+.no-vehicle-text { color: #8C8CA0; font-size: 28rpx; }
+.btn-add { background: #6B7FC2; color: #FFFFFF; font-size: 26rpx; padding: 12rpx 28rpx; border-radius: 40rpx; }
+.menu-item { display: flex; align-items: center; padding: 32rpx 28rpx; gap: 20rpx; }
+.menu-icon { font-size: 36rpx; }
+.menu-text { flex: 1; font-size: 30rpx; color: #1C1C3A; }
+.menu-arrow { color: #C0C0CC; font-size: 36rpx; }
+.divider { height: 1rpx; background: #EBEBF0; margin: 0 28rpx; }
+.mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); z-index: 100; }
+.sheet { position: fixed; bottom: 0; left: 0; right: 0; background: #FFFFFF; border-radius: 32rpx 32rpx 0 0; z-index: 101; transform: translateY(100%); transition: transform 0.3s; padding-bottom: env(safe-area-inset-bottom); }
+.sheet.show { transform: translateY(0); }
+.sheet-header { display: flex; align-items: center; justify-content: space-between; padding: 32rpx 32rpx 20rpx; border-bottom: 1rpx solid #EBEBF0; }
+.sheet-title { font-size: 34rpx; font-weight: 700; color: #1C1C3A; }
+.sheet-close { font-size: 44rpx; color: #8C8CA0; padding: 0 8rpx; }
+.sheet-item { padding: 0 32rpx; }
+.sheet-item-main { display: flex; align-items: center; padding: 24rpx 0; border-bottom: 1rpx solid #F4F5F9; gap: 20rpx; }
+.sheet-icon { font-size: 48rpx; }
+.sheet-info { flex: 1; }
+.sheet-name { font-size: 30rpx; font-weight: 600; color: #1C1C3A; display: block; }
+.sheet-plate { font-size: 24rpx; color: #8C8CA0; }
+.sheet-check { color: #6B7FC2; font-size: 36rpx; font-weight: 700; }
+.sheet-add { text-align: center; padding: 32rpx; color: #6B7FC2; font-size: 30rpx; font-weight: 600; border-top: 1rpx solid #EBEBF0; }

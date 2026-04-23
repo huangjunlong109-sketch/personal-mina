@@ -1,0 +1,98 @@
+.detail-page {
+  padding: 32rpx 24rpx;
+  padding-bottom: calc(32rpx + 96rpx + env(safe-area-inset-bottom));
+  background: #F5F5F5;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.detail-card {
+  background: #FFFFFF;
+  border-radius: 20rpx;
+  padding: 40rpx 30rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.detail-icon-wrap {
+  width: 100rpx;
+  height: 100rpx;
+  border-radius: 50%;
+  background: #F5F5F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-emoji {
+  font-size: 52rpx;
+}
+
+.detail-category {
+  font-size: 32rpx;
+  color: #666666;
+}
+
+.detail-amount {
+  font-size: 72rpx;
+  font-weight: 700;
+  color: #333333;
+}
+
+.detail-amount--income {
+  color: #07C160;
+}
+
+.detail-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-top: 1rpx solid #F5F5F5;
+}
+
+.detail-label {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+.detail-value {
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.detail-actions {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #FFFFFF;
+  border-top: 1rpx solid #EEEEEE;
+}
+
+.detail-actions-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  height: 96rpx;
+}
+
+.btn-edit,
+.btn-delete-text {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: #333333;
+}
+
+.detail-actions-divider {
+  width: 1rpx;
+  background: #EEEEEE;
+  align-self: stretch;
+  margin: 16rpx 0;
+}

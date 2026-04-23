@@ -1,0 +1,42 @@
+{
+  "appid": "wx363f64461a92eee2",
+  "projectname": "log-fuel",
+  "compileType": "miniprogram",
+  "libVersion": "3.15.0",
+  "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "uploadWithSourceMap": true,
+    "useIsolateContext": true,
+    "coverView": true,
+    "autoAudits": false,
+    "newFeature": false,
+    "uglifyFileName": false,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "showShadowRootInWxmlPanel": true,
+    "useMultiFrameRuntime": true,
+    "useApiHook": false,
+    "useDevTools": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "condition": {},
+  "packOptions": {
+    "ignore": [],
+    "include": []
+  },
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

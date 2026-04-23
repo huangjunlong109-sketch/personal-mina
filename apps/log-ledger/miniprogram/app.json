@@ -1,0 +1,34 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/chart/index",
+    "pages/bill/index",
+    "pages/profile/index",
+    "pages/category/index",
+    "pages/record/index",
+    "pages/record/detail",
+    "pages/chart-records/index"
+  ],
+  "tabBar": {
+    "custom": true,
+    "color": "#999999",
+    "selectedColor": "#FFD000",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "明细" },
+      { "pagePath": "pages/chart/index", "text": "图表" },
+      { "pagePath": "pages/bill/index", "text": "账单" },
+      { "pagePath": "pages/profile/index", "text": "我的" }
+    ]
+  },
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FFD000",
+    "navigationBarTitleText": "LoG记账",
+    "navigationBarTextStyle": "black"
+  },
+  "cloud": true,
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

@@ -1,0 +1,108 @@
+<view class="chart-page">
+  <!-- 顶部：支出/收入 + 周/月/年切换 -->
+  <view class="chart-header">
+    <view class="stat-type-btn" bindtap="toggleStatType">
+      <text>{{statType === 'expense' ? '支出' : '收入'}} ▼</text>
+    </view>
+    <view class="view-tabs">
+      <view
+        wx:for="{{viewOptions}}"
+        wx:key="key"
+        class="view-tab {{currentView === item.key ? 'view-tab--active' : ''}}"
+        bindtap="switchView"
+        data-key="{{item.key}}"
+      >{{item.label}}</view>
+    </view>
+  </view>
+
+  <!-- 周视图副标题 -->
+  <view wx:if="{{currentView === 'week'}}" class="week-nav">
+    <view class="week-nav-btn" bindtap="prevWeek">‹ 上周</view>
+    <text class="week-nav-label">{{isCurrentWeek ? '本周' : weekRangeDisplay}}</text>
+    <view class="week-nav-btn" bindtap="nextWeek">本周 ›</view>
+  </view>
+  <view wx:elif="{{currentView === 'month'}}" class="month-nav">
+    <text class="month-nav-label">本账期</text>
+  </view>
+  <view wx:elif="{{currentView === 'year'}}" class="year-nav">
+    <view class="year-nav-btn" bindtap="prevYear">‹</view>
+    <text class="year-nav-label">{{currentYear}}年</text>
+    <view class="year-nav-btn" bindtap="nextYear">›</view>
+  </view>
+
+  <scroll-view scroll-y class="chart-scroll">
+    <!-- 汇总数字 -->
+    <view class="summary-section">
+      <view class="summary-total">
+        <text class="summary-total-label">总{{statType === 'expense' ? '支出' : '收入'}}</text>
+        <text class="summary-total-value">{{totalDisplay}}</text>
+      </view>
+      <view class="summary-avg">
+        <text class="summary-avg-label">{{avgLabel}}</text>
+        <text class="summary-avg-value">{{avgDisplay}}</text>
+      </view>
+    </view>
+
+    <!-- 折线图（用 canvas 绘制）-->
+    <view class="chart-canvas-wrap">
+      <canvas
+        type="2d"
+        id="lineChart"
+        class="line-chart"
+        bindtouchstart="onChartTouchStart"
+        bindtouchmove="onChartTouchMove"
+        bindtouchend="onChartTouchEnd"
+      ></canvas>
+      <view wx:if="{{dailyList.length === 0}}" class="chart-empty">暂无数据</view>
+    </view>
+
+    <!-- X 轴日期标签 -->
+    <view class="chart-x-labels">
+      <text
+        wx:for="{{xLabels}}"
+        wx:key="index"
+        class="x-label"
+      >{{item}}</text>
+    </view>
+
+    <!-- 排行榜 -->
+    <view wx:if="{{categoryRank.length > 0}}" class="rank-section">
+      <text class="rank-title">{{statType === 'expense' ? '支出' : '收入'}}排行榜</text>
+      <view class="rank-list">
+        <view
+          wx:for="{{categoryRank}}"
+          wx:key="rowKey"
+          class="rank-item"
+          bindtap="openCategoryRecords"
+          data-category-id="{{item.category_id}}"
+          data-category-name="{{item.category_name}}"
+          data-category-icon="{{item.category_icon}}"
+          hover-class="rank-item--hover"
+        >
+          <view class="rank-item-left">
+            <view class="rank-icon-wrap">
+              <text class="rank-emoji">{{item.emoji}}</text>
+            </view>
+            <view class="rank-item-info">
+              <view class="rank-item-name-row">
+                <text class="rank-item-name">{{item.category_name}}</text>
+                <text class="rank-item-percent">{{item.percent}}%</text>
+              </view>
+              <view class="rank-bar-wrap">
+                <view class="rank-bar" style="width: {{item.percent}}%"></view>
+              </view>
+            </view>
+          </view>
+          <view class="rank-item-right">
+            <text class="rank-item-amount">{{item.amountDisplay}}</text>
+            <text class="rank-item-arrow">›</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:if="{{categoryRank.length === 0 && !loading}}" class="chart-empty-hint">
+      <text>本期暂无数据</text>
+    </view>
+  </scroll-view>
+</view>

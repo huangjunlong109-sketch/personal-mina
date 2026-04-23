@@ -1,0 +1,7 @@
+{
+  "usingComponents": {},
+  "navigationStyle": "custom",
+  "navigationBarTitleText": "记油耗",
+  "navigationBarBackgroundColor": "#8090C0",
+  "navigationBarTextStyle": "white"
+}

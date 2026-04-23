@@ -1,0 +1,32 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/record/index",
+    "pages/history/index",
+    "pages/vehicle/index",
+    "pages/import/index",
+    "pages/profile/index",
+    "pages/settings/index"
+  ],
+  "tabBar": {
+    "custom": true,
+    "color": "#888888",
+    "selectedColor": "#6B7FC2",
+    "backgroundColor": "#FFFFFF",
+    "list": [
+      { "pagePath": "pages/index/index", "text": "油耗" },
+      { "pagePath": "pages/profile/index", "text": "我的" },
+      { "pagePath": "pages/settings/index", "text": "设置" }
+    ]
+  },
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#8090C0",
+    "navigationBarTitleText": "LoG油耗",
+    "navigationBarTextStyle": "white"
+  },
+  "cloud": true,
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents"
+}

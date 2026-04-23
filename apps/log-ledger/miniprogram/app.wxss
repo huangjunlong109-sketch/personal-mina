@@ -1,0 +1,44 @@
+page {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  background-color: #F5F5F5;
+  --color-primary: #FFD000;
+  --color-primary-dark: #E6BB00;
+  --color-text: #333333;
+  --color-text-secondary: #999999;
+  --color-text-light: #BBBBBB;
+  --color-bg: #F5F5F5;
+  --color-card: #FFFFFF;
+  --color-border: #EEEEEE;
+  --color-expense: #333333;
+  --color-income: #07C160;
+  --tab-bar-height: 100rpx;
+}
+
+/* 通用卡片 */
+.card {
+  background: var(--color-card);
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+/* 通用分割线 */
+.divider {
+  height: 1rpx;
+  background: var(--color-border);
+}
+
+/* 金额 - 支出 */
+.amount-expense {
+  color: var(--color-expense);
+}
+
+/* 金额 - 收入 */
+.amount-income {
+  color: var(--color-income);
+}
+
+/* 页面内容区（避免被 Tab Bar 遮挡）*/
+.page-content {
+  padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom));
+}

@@ -1,0 +1,61 @@
+<view class="container">
+  <view class="top-tip">
+    <text>为计算准确，加油后请及时记录</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="state-box">
+    <text>加载中...</text>
+  </view>
+
+  <view wx:elif="{{groups.length === 0}}" class="state-box">
+    <text class="empty-icon">⛽</text>
+    <text class="empty-text">暂无加油记录</text>
+    <view class="empty-btn" bindtap="goRecord">去记一笔</view>
+  </view>
+
+  <view wx:else>
+    <view wx:for="{{groups}}" wx:key="month" class="month-group">
+      <text class="month-label">{{item.label}}</text>
+
+      <view wx:for="{{item.records}}" wx:key="_id" wx:for-item="r" class="record-card">
+        <!-- 卡片头：日期 + 油耗/油费 + 更多 -->
+        <view class="card-header">
+          <text class="card-day">{{r.dayLabel}}</text>
+          <view class="card-kpi">
+            <text class="card-consumption">{{r.fuelConsumption}} L/100km</text>
+            <text class="card-cost-km">{{r.costPerKm}} 元/km</text>
+          </view>
+          <view class="card-more" bindtap="onMoreTap" data-id="{{r._id}}">···</view>
+        </view>
+
+        <!-- 四格详情 -->
+        <view class="card-detail">
+          <view class="detail-row">
+            <view class="detail-item">
+              <text class="detail-val">{{r.odometer}}km</text>
+              <text class="detail-lbl">车辆总里程</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-val">{{r.unitPrice}}元/L</text>
+              <text class="detail-lbl">单价</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-val">{{r.liters}}L</text>
+              <text class="detail-lbl">加油量</text>
+            </view>
+            <view class="detail-item">
+              <text class="detail-val">{{r.totalAmount}}元</text>
+              <text class="detail-lbl">加油金额</text>
+            </view>
+          </view>
+          <view class="card-footer">
+            <text class="added-km">+{{r.addedMileage}}km</text>
+            <view wx:if="{{r.tankFull}}" class="tag tag-full">已加满</view>
+            <view wx:else class="tag tag-unfull">未加满</view>
+            <view wx:if="{{r.hasIssue}}" class="tag tag-issue">⚠️ 待核实</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>

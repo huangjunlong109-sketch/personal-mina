@@ -1,0 +1,28 @@
+.container { background: #F4F5F9; min-height: 100vh; padding-bottom: 40rpx; }
+.section { background: #fff; border-radius: 20rpx; margin: 20rpx 24rpx; padding: 28rpx; }
+.current-vehicle { display: flex; justify-content: space-between; align-items: center; }
+.label { font-size: 28rpx; color: #8C8CA0; }
+.val { font-size: 28rpx; font-weight: 600; color: #1C1C3A; }
+.vehicle-meta { display: flex; flex-direction: column; align-items: flex-end; }
+.plate { font-size: 24rpx; color: #8C8CA0; margin-top: 6rpx; }
+.desc-title { font-size: 30rpx; font-weight: 700; color: #1C1C3A; display: block; margin-bottom: 16rpx; }
+.desc-line { font-size: 26rpx; color: #8C8CA0; display: block; line-height: 1.8; }
+.file-row { display: flex; align-items: center; gap: 16rpx; }
+.file-icon { font-size: 40rpx; }
+.file-name { flex: 1; font-size: 28rpx; color: #1C1C3A; word-break: break-all; }
+.file-clear { font-size: 40rpx; color: #C0C0CC; padding: 0 8rpx; }
+.file-empty { display: flex; flex-direction: column; align-items: center; padding: 40rpx 0; gap: 16rpx; }
+.file-empty-icon { font-size: 64rpx; }
+.file-empty-text { font-size: 28rpx; color: #8C8CA0; }
+.status-box { text-align: center; padding: 32rpx; }
+.status-text { font-size: 30rpx; color: #6B7FC2; }
+.result-box { background: #fff; border-radius: 20rpx; margin: 0 24rpx; padding: 28rpx; }
+.result-title { font-size: 32rpx; font-weight: 700; color: #34C759; display: block; margin-bottom: 16rpx; }
+.result-line { font-size: 28rpx; color: #1C1C3A; display: block; line-height: 2; }
+.result-issues { margin-top: 20rpx; padding-top: 20rpx; border-top: 1rpx solid #EBEBF0; }
+.result-issue-title { font-size: 26rpx; color: #FF9500; display: block; margin-bottom: 12rpx; }
+.result-issue-item { font-size: 24rpx; color: #8C8CA0; display: block; line-height: 1.8; }
+.error-box { background: #fff; border-radius: 20rpx; margin: 0 24rpx; padding: 28rpx; color: #FF3B30; font-size: 28rpx; }
+.btn-import { margin: 32rpx 24rpx; height: 96rpx; background: #6B7FC2; border-radius: 56rpx; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 32rpx; font-weight: 600; }
+.btn-import.disabled { opacity: 0.4; }
+.btn-clear { margin: 0 24rpx 32rpx; height: 80rpx; background: transparent; border: 1rpx solid #FF3B30; border-radius: 56rpx; display: flex; align-items: center; justify-content: center; color: #FF3B30; font-size: 28rpx; }

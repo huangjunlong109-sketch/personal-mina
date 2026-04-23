@@ -1,0 +1,112 @@
+<view class="bill-page">
+  <view class="subtabs">
+    <view
+      class="subtab {{billTab === 'month' ? 'subtab--active' : ''}}"
+      bindtap="onBillTab"
+      data-tab="month"
+    >月账单</view>
+    <view
+      class="subtab {{billTab === 'year' ? 'subtab--active' : ''}}"
+      bindtap="onBillTab"
+      data-tab="year"
+    >年账单</view>
+  </view>
+
+  <view wx:if="{{billTab === 'month'}}" class="toolbar">
+    <picker mode="selector" range="{{yearLabels}}" value="{{yearIndex}}" bindchange="onYearChange">
+      <view class="year-trigger">{{selectedYear}}年 <text class="arrow">▼</text></view>
+    </picker>
+  </view>
+
+  <block wx:if="{{loading}}">
+    <view class="summary-card summary-card--loading">
+      <text class="card-water">¥</text>
+      <view class="skeleton skeleton-text skeleton-card-label"></view>
+      <view class="skeleton skeleton-text skeleton-card-amount"></view>
+      <view class="card-row">
+        <view class="skeleton skeleton-text skeleton-card-meta"></view>
+        <view class="skeleton skeleton-text skeleton-card-meta"></view>
+      </view>
+    </view>
+
+    <view class="table">
+      <view class="table-head">
+        <text class="col col-a">{{colA}}</text>
+        <text class="col col-b">{{incomeCol}}</text>
+        <text class="col col-b">{{expenseCol}}</text>
+        <text class="col col-c">{{balanceCol}}</text>
+        <text class="col-arrow" wx:if="{{billTab === 'month'}}"></text>
+      </view>
+      <view class="table-scroll table-scroll--loading">
+        <view class="table-row table-row--loading">
+          <view class="col col-a"><view class="skeleton skeleton-text skeleton-col-a"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b"></view></view>
+          <view class="col col-c"><view class="skeleton skeleton-text skeleton-col-c"></view></view>
+          <view class="col-arrow" wx:if="{{billTab === 'month'}}"></view>
+        </view>
+        <view class="table-row table-row--loading">
+          <view class="col col-a"><view class="skeleton skeleton-text skeleton-col-a skeleton-col-a--short"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b"></view></view>
+          <view class="col col-c"><view class="skeleton skeleton-text skeleton-col-c skeleton-col-c--short"></view></view>
+          <view class="col-arrow" wx:if="{{billTab === 'month'}}"></view>
+        </view>
+        <view class="table-row table-row--loading">
+          <view class="col col-a"><view class="skeleton skeleton-text skeleton-col-a"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b skeleton-col-b--short"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b"></view></view>
+          <view class="col col-c"><view class="skeleton skeleton-text skeleton-col-c"></view></view>
+          <view class="col-arrow" wx:if="{{billTab === 'month'}}"></view>
+        </view>
+        <view class="table-row table-row--loading">
+          <view class="col col-a"><view class="skeleton skeleton-text skeleton-col-a skeleton-col-a--short"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b"></view></view>
+          <view class="col col-b"><view class="skeleton skeleton-text skeleton-col-b skeleton-col-b--short"></view></view>
+          <view class="col col-c"><view class="skeleton skeleton-text skeleton-col-c"></view></view>
+          <view class="col-arrow" wx:if="{{billTab === 'month'}}"></view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="summary-card">
+      <text class="card-water">¥</text>
+      <text class="card-label">{{billTab === 'month' ? '年结余' : '总结余'}}</text>
+      <text class="card-amount">{{mainBalance}}</text>
+      <view class="card-row">
+        <text class="card-meta">{{billTab === 'month' ? '年收入' : '总收入'}} {{mainIncome}}</text>
+        <text class="card-meta">{{billTab === 'month' ? '年支出' : '总支出'}} {{mainExpense}}</text>
+      </view>
+    </view>
+
+    <view class="table">
+      <view class="table-head">
+        <text class="col col-a">{{colA}}</text>
+        <text class="col col-b">{{incomeCol}}</text>
+        <text class="col col-b">{{expenseCol}}</text>
+        <text class="col col-c">{{balanceCol}}</text>
+        <text class="col-arrow" wx:if="{{billTab === 'month'}}"></text>
+      </view>
+      <scroll-view class="table-scroll" scroll-y enhanced show-scrollbar="{{false}}">
+        <view
+          wx:for="{{tableRows}}"
+          wx:key="rowKey"
+          class="table-row"
+          bindtap="onRowTap"
+          data-year="{{item.year}}"
+          data-ym="{{item.ym}}"
+        >
+          <text class="col col-a">{{item.label}}</text>
+          <text class="col col-b">{{item.incomeDisplay}}</text>
+          <text class="col col-b">{{item.expenseDisplay}}</text>
+          <text class="col col-c">{{item.balanceDisplay}}</text>
+          <text class="col-arrow" wx:if="{{billTab === 'month'}}">›</text>
+        </view>
+
+        <view wx:if="{{billTab === 'year'}}" class="foot-hint">按账期年汇总，月账单与明细页都会随「每月开始于」变化</view>
+      </scroll-view>
+    </view>
+  </block>
+</view>
