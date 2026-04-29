@@ -2,7 +2,7 @@ const cloud = require('wx-server-sdk')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const _ = db.command
-const DEFAULT_PAGE_SIZE = 100
+const DEFAULT_PAGE_SIZE = 50
 const MAX_PAGE_SIZE = 200
 
 function billingPeriodRange(recordMonthYm, cycleStartDay) {
@@ -67,20 +67,18 @@ exports.main = async (event, context) => {
     }
   }
 
-  const [countRes, listRes] = await Promise.all([
-    db.collection('ledger_records').where(where).count(),
-    db.collection('ledger_records')
-      .where(where)
-      .orderBy('record_date', 'desc')
-      .orderBy('created_at', 'desc')
-      .skip(offset)
-      .limit(pageSize)
-      .get(),
-  ])
+  const listRes = await db.collection('ledger_records')
+    .where(where)
+    .orderBy('record_date', 'desc')
+    .orderBy('created_at', 'desc')
+    .skip(offset)
+    .limit(pageSize + 1)
+    .get()
 
-  const list = listRes.data || []
+  const rows = listRes.data || []
+  const hasMore = rows.length > pageSize
+  const list = hasMore ? rows.slice(0, pageSize) : rows
   const nextOffset = offset + list.length
-  const hasMore = nextOffset < (countRes.total || 0)
 
   return {
     success: true,

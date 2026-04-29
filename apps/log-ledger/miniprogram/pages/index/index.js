@@ -1,6 +1,6 @@
 const { currentRecordMonth, addMonth, fenToYuan, formatDisplayDate } = require('../../utils/date')
 const { getIconEmoji } = require('../../utils/categories')
-const PAGE_SIZE = 100
+const PAGE_SIZE = 50
 
 function paddedMonthFromYm(ym) {
   const m = ym.split('-')[1] || '01'
@@ -132,31 +132,21 @@ Page({
       listScrollTop: 0,
     })
 
-    return Promise.all([
-      this.fetchMonthSummary(ym)
-        .then(value => ({ ok: true, value }))
-        .catch(error => ({ ok: false, error })),
-      this.fetchRecordPage(ym, 0)
-        .then(value => ({ ok: true, value }))
-        .catch(error => ({ ok: false, error })),
-    ]).then(([summaryRes, listRes]) => {
+    this.fetchMonthSummary(ym).then((summary) => {
+      if (!this.isActiveMonthRequest(requestKey, ym)) return
+      this.setData({
+        totalExpenseDisplay: fenToYuan(summary.totalExpense),
+        totalIncomeDisplay: fenToYuan(summary.totalIncome),
+      })
+    }).catch(error => console.error('load summary error', error))
+
+    return this.fetchRecordPage(ym, 0).then((result) => {
+      if (!this.isActiveMonthRequest(requestKey, ym)) return
+      this.applyRecordPage(result, true)
+    }).catch((error) => {
       if (!this.isActiveMonthRequest(requestKey, ym)) return
 
-      if (summaryRes.ok) {
-        this.setData({
-          totalExpenseDisplay: fenToYuan(summaryRes.value.totalExpense),
-          totalIncomeDisplay: fenToYuan(summaryRes.value.totalIncome),
-        })
-      } else {
-        console.error('load summary error', summaryRes.error)
-      }
-
-      if (listRes.ok) {
-        this.applyRecordPage(listRes.value, true)
-        return
-      }
-
-      console.error('load records error', listRes.error)
+      console.error('load records error', error)
       this.setData({
         groupedList: [],
         loading: false,

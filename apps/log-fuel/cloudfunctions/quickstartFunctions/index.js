@@ -39,6 +39,141 @@ function validateRecord(record, prevOdometer) {
   return flags
 }
 
+function roundTo(value, digits = 2) {
+  const num = Number(value)
+  if (!Number.isFinite(num)) return null
+  const base = Math.pow(10, digits)
+  return Math.round(num * base) / base
+}
+
+function parseNumber(value) {
+  const num = parseFloat(value)
+  return Number.isFinite(num) ? num : 0
+}
+
+function parseInteger(value) {
+  const num = parseInt(value)
+  return Number.isFinite(num) ? num : 0
+}
+
+function sameValue(a, b) {
+  if (a == null && b == null) return true
+  return a === b
+}
+
+function sameArray(a, b) {
+  const left = Array.isArray(a) ? a : []
+  const right = Array.isArray(b) ? b : []
+  if (left.length !== right.length) return false
+  return left.every((item, index) => item === right[index])
+}
+
+function hasOwn(record, key) {
+  return Object.prototype.hasOwnProperty.call(record, key)
+}
+
+function needsManualDerivedRepair(records) {
+  return (records || []).some(record =>
+    record.importSource !== 'excel' && (
+      !hasOwn(record, 'addedMileage') ||
+      !hasOwn(record, 'fuelConsumption') ||
+      !hasOwn(record, 'costPerKm') ||
+      !Array.isArray(record.issueFlags) ||
+      record.confirmedByUser == null
+    )
+  )
+}
+
+function sortByRecordAsc(a, b) {
+  const dateDiff = String(a.refuelDate || '').localeCompare(String(b.refuelDate || ''))
+  if (dateDiff !== 0) return dateDiff
+  return Number(a.odometer || 0) - Number(b.odometer || 0)
+}
+
+function normalizeManualRecord(data, vehicleId) {
+  const liters = parseNumber(data.liters)
+  const unitPrice = parseNumber(data.unitPrice)
+  const totalAmount = parseNumber(data.totalAmount)
+  return {
+    vehicleId,
+    refuelDate: toYmd(data.refuelDate),
+    fuelGrade: data.fuelGrade || '92#',
+    liters,
+    unitPrice: unitPrice || (liters > 0 && totalAmount > 0 ? roundTo(totalAmount / liters) : 0),
+    totalAmount,
+    odometer: parseInteger(data.odometer),
+    tankFull: data.tankFull == null ? true : !!data.tankFull,
+    importSource: 'manual',
+  }
+}
+
+function buildManualDerived(record, prevOdometer) {
+  const odometer = Number(record.odometer)
+  const liters = Number(record.liters)
+  const totalAmount = Number(record.totalAmount)
+  const hasPrev = prevOdometer != null && Number.isFinite(Number(prevOdometer))
+  const hasOdometer = Number.isFinite(odometer) && odometer > 0
+  const addedMileage = hasPrev && hasOdometer ? odometer - Number(prevOdometer) : null
+  const fuelConsumption = addedMileage > 0 && liters > 0
+    ? roundTo((liters / addedMileage) * 100)
+    : null
+  const costPerKm = addedMileage > 0 && totalAmount > 0
+    ? roundTo(totalAmount / addedMileage)
+    : null
+  const next = { ...record, addedMileage, fuelConsumption, costPerKm }
+  return {
+    addedMileage,
+    fuelConsumption,
+    costPerKm,
+    issueFlags: validateRecord(next, hasPrev ? Number(prevOdometer) : null),
+  }
+}
+
+async function recalcManualRecords(openid, vehicleId) {
+  const res = await db.collection('fuel_records')
+    .where({ _openid: openid, vehicleId, isDeleted: _.neq(1) })
+    .orderBy('refuelDate', 'asc')
+    .orderBy('odometer', 'asc')
+    .limit(500)
+    .get()
+  const records = (res.data || []).sort(sortByRecordAsc)
+  let prevOdometer = null
+  const now = new Date()
+
+  for (const record of records) {
+    if (record.importSource !== 'excel') {
+      const derived = buildManualDerived(record, prevOdometer)
+      const patch = {}
+      let changed = false
+
+      ;['addedMileage', 'fuelConsumption', 'costPerKm'].forEach((key) => {
+        if (!sameValue(record[key], derived[key])) {
+          patch[key] = derived[key]
+          changed = true
+        }
+      })
+
+      if (!sameArray(record.issueFlags, derived.issueFlags)) {
+        patch.issueFlags = derived.issueFlags
+        patch.confirmedByUser = false
+        changed = true
+      }
+
+      if (record.confirmedByUser == null) {
+        patch.confirmedByUser = false
+        changed = true
+      }
+
+      if (changed) {
+        patch.modifyTime = now
+        await db.collection('fuel_records').doc(record._id).update({ data: patch })
+        Object.assign(record, patch)
+      }
+    }
+    prevOdometer = record.odometer != null ? Number(record.odometer) : null
+  }
+}
+
 // ─── vehicle ─────────────────────────────────────────────────────────────────
 
 async function vehicleList(openid) {
@@ -66,14 +201,23 @@ async function vehicleDelete(openid, id) {
 
 // ─── record ───────────────────────────────────────────────────────────────────
 
-async function recordList(openid, vehicleId) {
+async function fetchRecordsDesc(openid, vehicleId) {
   const res = await db.collection('fuel_records')
     .where({ _openid: openid, vehicleId, isDeleted: _.neq(1) })
     .orderBy('refuelDate', 'desc')
     .orderBy('odometer', 'desc')
     .limit(500)
     .get()
-  return { list: res.data }
+  return res.data || []
+}
+
+async function recordList(openid, vehicleId) {
+  let records = await fetchRecordsDesc(openid, vehicleId)
+  if (needsManualDerivedRepair(records)) {
+    await recalcManualRecords(openid, vehicleId)
+    records = await fetchRecordsDesc(openid, vehicleId)
+  }
+  return { list: records }
 }
 
 async function recordGet(openid, id) {
@@ -86,26 +230,42 @@ async function recordGet(openid, id) {
 
 async function recordAdd(openid, data) {
   const now = new Date()
+  const record = normalizeManualRecord(data || {}, data && data.vehicleId)
   const res = await db.collection('fuel_records').add({
-    data: { _openid: openid, ...data, isDeleted: 0, createTime: now, modifyTime: now }
+    data: {
+      _openid: openid,
+      ...record,
+      addedMileage: null,
+      fuelConsumption: null,
+      costPerKm: null,
+      issueFlags: [],
+      confirmedByUser: false,
+      isDeleted: 0,
+      createTime: now,
+      modifyTime: now
+    }
   })
+  await recalcManualRecords(openid, record.vehicleId)
   return { _id: res._id }
 }
 
 async function recordUpdate(openid, id, data) {
-  await recordGet(openid, id)
+  const oldRecord = await recordGet(openid, id)
   const now = new Date()
+  const record = normalizeManualRecord(data || {}, oldRecord.vehicleId)
   await db.collection('fuel_records').doc(id).update({
-    data: { ...data, modifyTime: now }
+    data: { ...record, confirmedByUser: false, modifyTime: now }
   })
+  await recalcManualRecords(openid, oldRecord.vehicleId)
   return { ok: true }
 }
 
 async function recordDelete(openid, id) {
-  await recordGet(openid, id)
+  const record = await recordGet(openid, id)
   await db.collection('fuel_records').doc(id).update({
     data: { isDeleted: 1, modifyTime: new Date() }
   })
+  await recalcManualRecords(openid, record.vehicleId)
   return { ok: true }
 }
 
