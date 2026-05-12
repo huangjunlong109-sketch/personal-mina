@@ -271,7 +271,7 @@ Page({
 
   fetchAllRecords(query) {
     const db = wx.cloud.database()
-    const batchSize = 200
+    const batchSize = 20
     const list = []
 
     const loadPage = (skip) => {
