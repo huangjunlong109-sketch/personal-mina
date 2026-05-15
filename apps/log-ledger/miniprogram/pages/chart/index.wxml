@@ -22,7 +22,9 @@
     <view class="week-nav-btn" bindtap="nextWeek">本周 ›</view>
   </view>
   <view wx:elif="{{currentView === 'month'}}" class="month-nav">
-    <text class="month-nav-label">本账期</text>
+    <view class="month-nav-btn" bindtap="prevMonth">‹</view>
+    <text class="month-nav-label">{{currentRecordMonthLabel}}</text>
+    <view class="month-nav-btn {{!canGoNextMonth ? 'month-nav-btn--disabled' : ''}}" bindtap="nextMonth">›</view>
   </view>
   <view wx:elif="{{currentView === 'year'}}" class="year-nav">
     <view class="year-nav-btn" bindtap="prevYear">‹</view>

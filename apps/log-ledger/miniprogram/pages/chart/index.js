@@ -1,4 +1,4 @@
-const { calcRecordMonth, currentRecordMonth, billingPeriodRange, billingYearRange, daysInclusive, fenToYuan, formatDate } = require('../../utils/date')
+const { calcRecordMonth, currentRecordMonth, billingPeriodRange, billingYearRange, daysInclusive, fenToYuan, formatDate, addMonth } = require('../../utils/date')
 const { getIconEmoji } = require('../../utils/categories')
 
 function getWeekStart(date) {
@@ -36,6 +36,8 @@ Page({
     weekRangeDisplay: '',
     isCurrentWeek: true,
     currentRecordMonth: '',
+    currentRecordMonthLabel: '本账期',
+    canGoNextMonth: false,
     currentYear: new Date().getFullYear(),
     totalDisplay: '0.00',
     avgLabel: '日均值',
@@ -70,7 +72,12 @@ Page({
       const app = getApp() || { globalData: { cycleStartDay: 1 } }
       const cycleStartDay = (app.globalData && app.globalData.cycleStartDay) || 1
       const ym = currentRecordMonth(cycleStartDay)
-      this.setData({ currentRecordMonth: ym, currentYear: Number(ym.split('-')[0]) })
+      this.setData({
+        currentRecordMonth: ym,
+        currentRecordMonthLabel: this.formatRecordMonthLabel(ym, cycleStartDay),
+        canGoNextMonth: false,
+        currentYear: Number(ym.split('-')[0]),
+      })
       const tabBar = this.getTabBar()
       if (tabBar) tabBar.setData({ selected: 1 })
       this.loadStats()
@@ -149,6 +156,39 @@ Page({
       weekStartDate: newStart, weekEndDate: formatDate(end),
       weekRangeDisplay: `${start.getMonth() + 1}/${start.getDate()}-${end.getMonth() + 1}/${end.getDate()}`,
       isCurrentWeek: newStart === formatDate(currentWeekStart),
+    })
+    this.loadStats()
+  },
+
+  formatRecordMonthLabel(recordMonth, cycleStartDay) {
+    const currentMonth = currentRecordMonth(cycleStartDay)
+    if (recordMonth === currentMonth) return '本账期'
+    return `${recordMonth} 账期`
+  },
+
+  prevMonth() {
+    const app = getApp() || { globalData: { cycleStartDay: 1 } }
+    const cycleStartDay = (app.globalData && app.globalData.cycleStartDay) || 1
+    const recordMonth = addMonth(this.data.currentRecordMonth, -1)
+    this.setData({
+      currentRecordMonth: recordMonth,
+      currentRecordMonthLabel: this.formatRecordMonthLabel(recordMonth, cycleStartDay),
+      canGoNextMonth: recordMonth < currentRecordMonth(cycleStartDay),
+    })
+    this.loadStats()
+  },
+
+  nextMonth() {
+    if (!this.data.canGoNextMonth) return
+    const app = getApp() || { globalData: { cycleStartDay: 1 } }
+    const cycleStartDay = (app.globalData && app.globalData.cycleStartDay) || 1
+    const recordMonth = addMonth(this.data.currentRecordMonth, 1)
+    const currentMonth = currentRecordMonth(cycleStartDay)
+    if (recordMonth > currentMonth) return
+    this.setData({
+      currentRecordMonth: recordMonth,
+      currentRecordMonthLabel: this.formatRecordMonthLabel(recordMonth, cycleStartDay),
+      canGoNextMonth: recordMonth < currentMonth,
     })
     this.loadStats()
   },
@@ -258,7 +298,10 @@ Page({
   },
 
   drawChart(daily) {
-    if (daily.length === 0) return
+    if (daily.length === 0) {
+      this.clearChart()
+      return
+    }
     const plotDaily = daily.length === 1 ? [daily[0], Object.assign({}, daily[0])] : daily
     wx.createSelectorQuery().in(this).select('#lineChart').fields({ node: true, size: true }).exec(res => {
       const canvas = res[0] && res[0].node
@@ -306,6 +349,21 @@ Page({
         ctx.fillStyle = '#FFFFFF'; ctx.fill()
         ctx.strokeStyle = '#FFD000'; ctx.lineWidth = 3; ctx.stroke()
       })
+    })
+  },
+
+  clearChart() {
+    wx.createSelectorQuery().in(this).select('#lineChart').fields({ node: true, size: true }).exec(res => {
+      const canvas = res[0] && res[0].node
+      const width = (res[0] && res[0].width) || 375
+      const height = (res[0] && res[0].height) || 180
+      if (!canvas) return
+      const ctx = canvas.getContext('2d')
+      const dpr = getPixelRatio()
+      canvas.width = width * dpr
+      canvas.height = height * dpr
+      ctx.scale(dpr, dpr)
+      ctx.clearRect(0, 0, width, height)
     })
   },
 

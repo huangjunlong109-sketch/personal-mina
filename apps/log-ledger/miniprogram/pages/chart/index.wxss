@@ -54,10 +54,15 @@
 }
 
 .week-nav-btn,
+.month-nav-btn,
 .year-nav-btn {
   font-size: 28rpx;
   color: rgba(0,0,0,0.5);
   padding: 0 20rpx;
+}
+
+.month-nav-btn--disabled {
+  color: rgba(0,0,0,0.2);
 }
 
 .week-nav-label,
