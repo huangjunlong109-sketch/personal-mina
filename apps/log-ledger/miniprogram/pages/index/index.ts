@@ -431,6 +431,12 @@ Page({
           return
         }
         if (res.tapIndex === 1) {
+          const modalRes = await wx.showModal({
+            title: '确认删除',
+            content: '删除后不可恢复',
+            confirmColor: '#FF4444',
+          })
+          if (!modalRes.confirm) return
           await wx.cloud.callFunction({ name: 'record_delete', data: { id: record._id } })
           wx.showToast({ title: '已删除', icon: 'success' })
           this.refreshPage()

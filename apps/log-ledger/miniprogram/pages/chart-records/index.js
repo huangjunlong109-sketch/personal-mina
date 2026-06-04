@@ -530,14 +530,22 @@ Page({
           return
         }
         if (res.tapIndex !== 1) return
-        const db = wx.cloud.database()
-        db.collection('ledger_records')
-          .doc(record._id)
-          .update({ data: { is_deleted: true, updated_at: new Date() } })
-          .then(() => {
-            wx.showToast({ title: '已删除', icon: 'success' })
-            this.loadRecords()
-          })
+        wx.showModal({
+          title: '确认删除',
+          content: '删除后不可恢复',
+          confirmColor: '#FF4444',
+          success: (modalRes) => {
+            if (!modalRes.confirm) return
+            const db = wx.cloud.database()
+            db.collection('ledger_records')
+              .doc(record._id)
+              .update({ data: { is_deleted: true, updated_at: new Date() } })
+              .then(() => {
+                wx.showToast({ title: '已删除', icon: 'success' })
+                this.loadRecords()
+              })
+          },
+        })
       },
     })
   },
