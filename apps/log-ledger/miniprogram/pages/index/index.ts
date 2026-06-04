@@ -424,9 +424,13 @@ Page({
   onRecordLongPress(e: any) {
     const { record } = e.currentTarget.dataset
     wx.showActionSheet({
-      itemList: ['删除'],
+      itemList: ['编辑', '删除'],
       success: async (res) => {
         if (res.tapIndex === 0) {
+          wx.navigateTo({ url: `/pages/record/index?id=${record._id}` })
+          return
+        }
+        if (res.tapIndex === 1) {
           await wx.cloud.callFunction({ name: 'record_delete', data: { id: record._id } })
           wx.showToast({ title: '已删除', icon: 'success' })
           this.refreshPage()

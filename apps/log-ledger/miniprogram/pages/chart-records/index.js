@@ -523,9 +523,13 @@ Page({
   onRecordLongPress(e) {
     const { record } = e.currentTarget.dataset
     wx.showActionSheet({
-      itemList: ['删除'],
+      itemList: ['编辑', '删除'],
       success: (res) => {
-        if (res.tapIndex !== 0) return
+        if (res.tapIndex === 0) {
+          wx.navigateTo({ url: `/pages/record/index?id=${record._id}` })
+          return
+        }
+        if (res.tapIndex !== 1) return
         const db = wx.cloud.database()
         db.collection('ledger_records')
           .doc(record._id)
