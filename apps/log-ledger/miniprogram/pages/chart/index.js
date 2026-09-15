@@ -71,12 +71,13 @@ Page({
     this.syncCycleStartDay().then(() => {
       const app = getApp() || { globalData: { cycleStartDay: 1 } }
       const cycleStartDay = (app.globalData && app.globalData.cycleStartDay) || 1
-      const ym = currentRecordMonth(cycleStartDay)
+      const currentMonth = currentRecordMonth(cycleStartDay)
+      const selectedMonth = this.data.currentRecordMonth || currentMonth
       this.setData({
-        currentRecordMonth: ym,
-        currentRecordMonthLabel: this.formatRecordMonthLabel(ym, cycleStartDay),
-        canGoNextMonth: false,
-        currentYear: Number(ym.split('-')[0]),
+        currentRecordMonth: selectedMonth,
+        currentRecordMonthLabel: this.formatRecordMonthLabel(selectedMonth, cycleStartDay),
+        canGoNextMonth: selectedMonth < currentMonth,
+        currentYear: this.data.currentYear || Number(currentMonth.split('-')[0]),
       })
       const tabBar = this.getTabBar()
       if (tabBar) tabBar.setData({ selected: 1 })
