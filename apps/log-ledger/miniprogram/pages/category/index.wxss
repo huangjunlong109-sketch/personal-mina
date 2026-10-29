@@ -42,12 +42,20 @@
 }
 
 .section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 24rpx 30rpx 8rpx;
 }
 
 .section-title {
   font-size: 24rpx;
   color: #999999;
+}
+
+.section-tip {
+  font-size: 22rpx;
+  color: #BBBBBB;
 }
 
 .cat-grid {
@@ -74,6 +82,10 @@
 
 .cat-item--tap:active {
   opacity: 0.85;
+}
+
+.cat-item--dragging {
+  opacity: 0.55;
 }
 
 .cat-icon-wrap {
@@ -110,7 +122,8 @@
 
 /* 隐藏/显示 按钮（右上角小圆标） */
 .cat-hide-btn,
-.cat-show-btn {
+.cat-show-btn,
+.cat-delete-btn {
   position: absolute;
   top: 8rpx;
   right: 8rpx;
@@ -128,6 +141,13 @@
 
 .cat-show-btn {
   background: #FFD000;
+  color: #FFFFFF;
+}
+
+.cat-delete-btn {
+  left: 8rpx;
+  right: auto;
+  background: #E64340;
   color: #FFFFFF;
 }
 

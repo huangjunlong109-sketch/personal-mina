@@ -17,13 +17,19 @@
     <!-- 已显示分类 -->
     <view class="section-header">
       <text class="section-title">已显示（{{visibleList.length}}）</text>
+      <text class="section-tip">长按拖动排序</text>
     </view>
     <view class="cat-grid">
       <view
         wx:for="{{visibleList}}"
         wx:key="_id"
-        class="cat-item {{item.is_builtin ? '' : 'cat-item--tap'}}"
+        class="cat-item cat-item--draggable {{item.is_builtin ? '' : 'cat-item--tap'}} {{draggingId === item._id ? 'cat-item--dragging' : ''}}"
         bindtap="onCatItemTap"
+        bindtouchstart="onCatTouchStart"
+        bindtouchmove="onCatTouchMove"
+        bindtouchend="onCatTouchEnd"
+        bindtouchcancel="onCatTouchEnd"
+        data-index="{{index}}"
         data-id="{{item._id}}"
         data-name="{{item.name}}"
         data-icon="{{item.icon}}"
@@ -38,6 +44,13 @@
           catchtap="hideCategory"
           data-id="{{item._id}}"
         >−</view>
+        <view
+          wx:if="{{!item.is_builtin}}"
+          class="cat-delete-btn"
+          catchtap="deleteCategory"
+          data-id="{{item._id}}"
+          data-name="{{item.name}}"
+        >×</view>
       </view>
       <!-- 新增按钮 -->
       <view class="cat-item cat-add" bindtap="showAddModal">
@@ -73,6 +86,13 @@
             catchtap="showCategory"
             data-id="{{item._id}}"
           >+</view>
+          <view
+            wx:if="{{!item.is_builtin}}"
+            class="cat-delete-btn"
+            catchtap="deleteCategory"
+            data-id="{{item._id}}"
+            data-name="{{item.name}}"
+          >×</view>
         </view>
       </view>
     </view>

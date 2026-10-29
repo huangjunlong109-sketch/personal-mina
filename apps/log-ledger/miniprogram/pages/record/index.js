@@ -95,13 +95,15 @@ Page({
   },
 
   loadCategories(type, preferredCategoryId) {
-    const db = wx.cloud.database()
-    return db.collection('ledger_categories')
-      .where({ type, is_hidden: false })
-      .orderBy('sort_order', 'asc')
-      .get()
+    return wx.cloud.callFunction({
+      name: 'category_list',
+      data: { type },
+    })
       .then(res => {
-        const list = (res.data || []).map(c => ({ ...c, emoji: getIconEmoji(c.icon) }))
+        if (!res.result || !res.result.success) throw new Error('category_list_failed')
+        const list = (res.result.list || [])
+          .filter(c => !c.is_hidden)
+          .map(c => ({ ...c, emoji: getIconEmoji(c.icon) }))
         let selected = list[0] || null
         let selectedId = selected ? selected._id : ''
         if (preferredCategoryId) {
