@@ -1,5 +1,6 @@
 const { fenToYuan } = require('../../utils/date')
 const { getIconEmoji } = require('../../utils/categories')
+const cache = require('../../utils/cache')
 
 Page({
   data: { record: null },
@@ -41,6 +42,7 @@ Page({
         db.collection('ledger_records').doc(this.data.record._id)
           .update({ data: { is_deleted: true, updated_at: new Date() } })
           .then(() => {
+            cache.bumpRecords()
             wx.showToast({ title: '已删除', icon: 'success' })
             setTimeout(() => wx.navigateBack(), 800)
           })

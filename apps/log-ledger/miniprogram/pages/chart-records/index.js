@@ -541,6 +541,7 @@ Page({
               .doc(record._id)
               .update({ data: { is_deleted: true, updated_at: new Date() } })
               .then(() => {
+                require('../../utils/cache').bumpRecords()
                 wx.showToast({ title: '已删除', icon: 'success' })
                 this.loadRecords()
               })

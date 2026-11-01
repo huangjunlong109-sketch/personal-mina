@@ -1,5 +1,6 @@
 const { currentRecordMonth, addMonth, fenToYuan, formatDisplayDate } = require('../../utils/date')
 const { getIconEmoji } = require('../../utils/categories')
+const cache = require('../../utils/cache')
 const PAGE_SIZE = 50
 
 function paddedMonthFromYm(ym) {
@@ -120,39 +121,75 @@ Page({
 
   refreshPage() {
     const ym = this.data.currentRecordMonth || this.data.naturalFilterYm || currentRecordMonth(getCycleStartDay())
+    const cycleStartDay = getCycleStartDay()
+    const revision = cache.getRecordRevision()
+    const cached = cache.getMonthCache(ym, cycleStartDay)
+    const listEpoch = this._listEpoch || 0
     const requestKey = `${ym}-${Date.now()}`
     this._activeMonthRequestKey = requestKey
     this._records = []
     this._edgeSwitchEnabledAt = Date.now() + 500
-    this.setData({
-      loading: true,
-      loadingMore: false,
-      hasMore: true,
-      pageOffset: 0,
-      listScrollTop: 0,
-    })
+    if (cached) {
+      this.setData({
+        loading: false,
+        loadingMore: false,
+        listScrollTop: 0,
+        totalExpenseDisplay: fenToYuan(cached.totalExpense || 0),
+        totalIncomeDisplay: fenToYuan(cached.totalIncome || 0),
+      })
+      this.applyRecordPage(cached, true)
+    } else {
+      this.setData({
+        loading: true,
+        loadingMore: false,
+        hasMore: true,
+        pageOffset: 0,
+        listScrollTop: 0,
+      })
+    }
 
-    this.fetchMonthSummary(ym).then((summary) => {
-      if (!this.isActiveMonthRequest(requestKey, ym)) return
+    const summaryPromise = this.fetchMonthSummary(ym).then((summary) => {
+      if (!this.isActiveMonthRequest(requestKey, ym) || cache.getRecordRevision() !== revision) return null
       this.setData({
         totalExpenseDisplay: fenToYuan(summary.totalExpense),
         totalIncomeDisplay: fenToYuan(summary.totalIncome),
       })
-    }).catch(error => console.error('load summary error', error))
+      return summary
+    }).catch(error => {
+      console.error('load summary error', error)
+      return null
+    })
 
-    return this.fetchRecordPage(ym, 0).then((result) => {
-      if (!this.isActiveMonthRequest(requestKey, ym)) return
+    const listPromise = this.fetchRecordPage(ym, 0).then((result) => {
+      if (!this.isActiveMonthRequest(requestKey, ym) || cache.getRecordRevision() !== revision) return null
+      if ((this._listEpoch || 0) !== listEpoch) return null
       this.applyRecordPage(result, true)
+      return result
     }).catch((error) => {
-      if (!this.isActiveMonthRequest(requestKey, ym)) return
-
+      if (!this.isActiveMonthRequest(requestKey, ym)) return null
       console.error('load records error', error)
-      this.setData({
-        groupedList: [],
-        loading: false,
-        loadingMore: false,
-        hasMore: false,
-        pageOffset: 0,
+      if (!cached) {
+        this.setData({
+          groupedList: [],
+          loading: false,
+          loadingMore: false,
+          hasMore: false,
+          pageOffset: 0,
+        })
+      }
+      return null
+    })
+
+    return Promise.all([summaryPromise, listPromise]).then(([summary, result]) => {
+      if (!summary || !result || !this.isActiveMonthRequest(requestKey, ym)) return
+      const serverDay = Number(result.cycle_start_day)
+      if (!serverDay || serverDay !== Number(cycleStartDay)) return
+      cache.saveMonthCache(revision, ym, serverDay, {
+        list: result.list || [],
+        has_more: !!result.has_more,
+        next_offset: result.next_offset != null ? result.next_offset : (result.list || []).length,
+        totalExpense: summary.totalExpense,
+        totalIncome: summary.totalIncome,
       })
     })
   },
@@ -181,7 +218,11 @@ Page({
         offset,
         page_size: PAGE_SIZE,
       },
-    }).then(res => res.result || {})
+    }).then(res => {
+      const result = res.result || {}
+      if (!result.success || !Array.isArray(result.list)) throw new Error('record_list_failed')
+      return result
+    })
   },
 
   isActiveMonthRequest(requestKey, recordMonth) {
@@ -386,8 +427,8 @@ Page({
               db.collection('ledger_records').doc(record._id)
                 .update({ data: { is_deleted: true, updated_at: new Date() } })
                 .then(() => {
+                  cache.bumpRecords()
                   wx.showToast({ title: '已删除', icon: 'success' })
-                  this.refreshPage()
                 })
             },
           })
@@ -401,6 +442,7 @@ Page({
 
     const ym = this.data.currentRecordMonth || this.data.naturalFilterYm || currentRecordMonth(getCycleStartDay())
     const requestKey = this._activeMonthRequestKey
+    this._listEpoch = (this._listEpoch || 0) + 1
     this.setData({ loadingMore: true })
 
     this.fetchRecordPage(ym, Number(this.data.pageOffset) || 0)

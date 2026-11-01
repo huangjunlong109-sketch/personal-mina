@@ -1,4 +1,5 @@
 const { getIconEmoji, getIconPickerGroups } = require('../../utils/categories')
+const cache = require('../../utils/cache')
 
 function callCategorySave(data) {
   return wx.cloud.callFunction({
@@ -26,6 +27,17 @@ Page({
     draggingId: '',
   },
 
+  onLoad() {
+    this._unwatchCategories = cache.watchCategories(list => {
+      if (this._sorting || this._savingSort) return
+      this.applyCategories(list)
+    })
+  },
+
+  onUnload() {
+    if (this._unwatchCategories) this._unwatchCategories()
+  },
+
   onShow() {
     this.loadCategories()
   },
@@ -35,34 +47,77 @@ Page({
     this.loadCategories()
   },
 
-  loadCategories() {
-    wx.cloud.callFunction({
-      name: 'category_list',
-      data: { type: this.data.currentType },
+  applyCategories(list) {
+    const rows = (list || [])
+      .filter(item => item.type === this.data.currentType)
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(item => Object.assign({}, item, { emoji: getIconEmoji(item.icon) }))
+    this.setData({
+      visibleList: rows.filter(item => !item.is_hidden),
+      hiddenList: rows.filter(item => item.is_hidden),
     })
-      .then(res => {
-        if (!res.result || !res.result.success) throw new Error('category_list_failed')
-        const list = (res.result.list || []).map(c => ({ ...c, emoji: getIconEmoji(c.icon) }))
-        this.setData({
-          visibleList: list.filter(c => !c.is_hidden),
-          hiddenList: list.filter(c => c.is_hidden),
-        })
-      }).catch(err => {
-        console.error('loadCategories error', err)
-        wx.showToast({ title: '加载失败', icon: 'none' })
-      })
+  },
+
+  loadCategories(ignoreCache, silent) {
+    const type = this.data.currentType
+    const seq = (this._categorySeq || 0) + 1
+    this._categorySeq = seq
+    if (!ignoreCache && !this._sorting && !this._savingSort) {
+      const cached = cache.readCategories()
+      if (cached) this.applyCategories(cached)
+    }
+    return cache.refreshCategories().then(({ list, fresh }) => {
+      if (this._sorting || this._savingSort) return
+      if (!fresh || !list || seq !== this._categorySeq || type !== this.data.currentType) return
+      this.applyCategories(list)
+    }).catch(err => {
+      console.error('loadCategories error', err)
+      if (silent || (!ignoreCache && cache.readCategories())) return
+      wx.showToast({ title: '加载失败', icon: 'none' })
+    })
+  },
+
+  failCategoryChange(snapshot, title) {
+    cache.revertCategories(snapshot)
+    if (snapshot) this.applyCategories(snapshot)
+    wx.showToast({ title, icon: 'none' })
+    this.loadCategories(true, true)
   },
 
   hideCategory(e) {
-    callCategorySave({ id: e.currentTarget.dataset.id, is_hidden: true })
-      .then(() => this.loadCategories())
-      .catch(() => wx.showToast({ title: '操作失败', icon: 'none' }))
+    const id = e.currentTarget.dataset.id
+    const snapshot = cache.cloneCategories()
+    const next = cache.commitCategories(list => list.map(item => (
+      item._id === id ? Object.assign({}, item, { is_hidden: true }) : item
+    )))
+    if (next) this.applyCategories(next)
+    callCategorySave({ id, is_hidden: true })
+      .then(() => cache.refreshCategories(list => {
+        const item = list.find(row => row._id === id)
+        return !!item && !!item.is_hidden
+      }))
+      .then(result => {
+        if (result && result.fresh && result.list) this.applyCategories(result.list)
+      })
+      .catch(() => this.failCategoryChange(snapshot, '操作失败'))
   },
 
   showCategory(e) {
-    callCategorySave({ id: e.currentTarget.dataset.id, is_hidden: false })
-      .then(() => this.loadCategories())
-      .catch(() => wx.showToast({ title: '操作失败', icon: 'none' }))
+    const id = e.currentTarget.dataset.id
+    const snapshot = cache.cloneCategories()
+    const next = cache.commitCategories(list => list.map(item => (
+      item._id === id ? Object.assign({}, item, { is_hidden: false }) : item
+    )))
+    if (next) this.applyCategories(next)
+    callCategorySave({ id, is_hidden: false })
+      .then(() => cache.refreshCategories(list => {
+        const item = list.find(row => row._id === id)
+        return !!item && !item.is_hidden
+      }))
+      .then(result => {
+        if (result && result.fresh && result.list) this.applyCategories(result.list)
+      })
+      .catch(() => this.failCategoryChange(snapshot, '操作失败'))
   },
 
   deleteCategory(e) {
@@ -73,6 +128,9 @@ Page({
       confirmColor: '#E64340',
       success: res => {
         if (!res.confirm) return
+        const snapshot = cache.cloneCategories()
+        const next = cache.commitCategories(list => list.filter(item => item._id !== id))
+        if (next) this.applyCategories(next)
         wx.showLoading({ title: '删除中' })
         wx.cloud.callFunction({
           name: 'category_delete',
@@ -82,10 +140,14 @@ Page({
             throw new Error((result.result && result.result.message) || 'category_delete_failed')
           }
           wx.showToast({ title: '已删除', icon: 'success' })
-          this.loadCategories()
-        }).catch(() => {
-          wx.showToast({ title: '删除失败', icon: 'none' })
-        }).finally(() => wx.hideLoading())
+          return cache.refreshCategories(list => !list.some(item => item._id === id)).catch(err => {
+            console.error('refresh categories', err)
+            return null
+          })
+        }).then(result => {
+          if (result && result.fresh && result.list) this.applyCategories(result.list)
+        }).catch(() => this.failCategoryChange(snapshot, '删除失败'))
+          .finally(() => wx.hideLoading())
       },
     })
   },
@@ -134,6 +196,7 @@ Page({
 
   onCatTouchStart(e) {
     if (this._savingSort) return
+    this._sorting = true
     this._dragIndex = Number(e.currentTarget.dataset.index)
     this._dragging = false
     this._dragRects = []
@@ -171,24 +234,45 @@ Page({
     this._dragRects = []
     this._dragging = false
     this.setData({ draggingId: '' })
-    if (!isDragging) return
+    if (!isDragging) {
+      this._sorting = false
+      const cached = cache.readCategories()
+      if (cached) this.applyCategories(cached)
+      return
+    }
 
     this._suppressItemTap = true
     setTimeout(() => { this._suppressItemTap = false }, 200)
+    const snapshot = cache.cloneCategories()
+    const orderedIds = this.data.visibleList.map(item => item._id)
+    cache.bumpCategories()
     this._savingSort = true
     callCategorySave({
-      sort_list: this.data.visibleList.map((item, index) => ({
-        id: item._id,
+      sort_list: orderedIds.map((id, index) => ({
+        id,
         sort_order: index + 1,
       })),
     }).then(() => {
+      const next = cache.commitCategories(list => list.map(item => {
+        const index = orderedIds.indexOf(item._id)
+        return index < 0 ? item : Object.assign({}, item, { sort_order: index + 1 })
+      }))
+      if (next) this.applyCategories(next)
       wx.showToast({ title: '排序已保存', icon: 'success' })
-    }).catch(() => {
-      wx.showToast({ title: '排序保存失败', icon: 'none' })
-      this.loadCategories()
-    }).finally(() => {
-      this._savingSort = false
-    })
+      return cache.refreshCategories(list => orderedIds.every((id, index) => {
+        const item = list.find(row => row._id === id)
+        return !!item && Number(item.sort_order) === index + 1
+      })).catch(err => {
+        console.error('refresh categories', err)
+        return null
+      })
+    }).then(result => {
+      if (result && result.fresh && result.list) this.applyCategories(result.list)
+    }).catch(() => this.failCategoryChange(snapshot, '排序保存失败'))
+      .finally(() => {
+        this._savingSort = false
+        this._sorting = false
+      })
   },
 
   saveCategory() {
@@ -201,19 +285,52 @@ Page({
     if (isEditMode && editId) {
       wx.showLoading({ title: '保存中' })
       callCategorySave({ id: editId, name, icon: newCatIcon }).then(() => {
+        const next = cache.commitCategories(list => list.map(item => (
+          item._id === editId ? Object.assign({}, item, { name, icon: newCatIcon }) : item
+        )))
         this.setData({ showModal: false, isEditMode: false, editId: '' })
+        if (next) this.applyCategories(next)
         wx.showToast({ title: '已保存', icon: 'success' })
-        this.loadCategories()
+        return cache.refreshCategories(list => {
+          const item = list.find(row => row._id === editId)
+          return !!item && item.name === name && item.icon === newCatIcon
+        }).catch(err => {
+          console.error('refresh categories', err)
+          return null
+        })
+      }).then(result => {
+        if (result && result.fresh && result.list) this.applyCategories(result.list)
       }).catch(() => wx.showToast({ title: '保存失败', icon: 'none' }))
         .finally(() => wx.hideLoading())
       return
     }
     wx.showLoading({ title: '添加中' })
     callCategorySave({ type: currentType, name, icon: newCatIcon })
-      .then(() => {
+      .then(result => {
+        const next = cache.commitCategories(list => {
+          const maxOrder = list.reduce((max, item) => (
+            item.type === currentType ? Math.max(max, item.sort_order || 0) : max
+          ), 0)
+          return list.concat({
+            _id: result.id,
+            type: currentType,
+            name,
+            icon: newCatIcon,
+            sort_order: maxOrder + 1,
+            is_builtin: false,
+            is_hidden: false,
+          })
+        })
         this.setData({ showModal: false })
+        if (next) this.applyCategories(next)
         wx.showToast({ title: '已添加', icon: 'success' })
-        this.loadCategories()
+        return cache.refreshCategories(list => list.some(item => item._id === result.id)).catch(err => {
+          console.error('refresh categories', err)
+          return null
+        })
+      })
+      .then(result => {
+        if (result && result.fresh && result.list) this.applyCategories(result.list)
       })
       .catch(() => wx.showToast({ title: '添加失败', icon: 'none' }))
       .finally(() => wx.hideLoading())

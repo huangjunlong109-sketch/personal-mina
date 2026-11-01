@@ -1,7 +1,9 @@
+const { refreshCategories } = require('./utils/cache')
+
 App({
   onLaunch() {
     wx.cloud.init({ env: 'cloud1-8gnvg7ord2c00fd6', traceUser: true })
-    this.initUser()
+    this.initUser().then(() => refreshCategories()).catch(e => console.error('prefetch categories error', e))
   },
 
   globalData: { cycleStartDay: 1, categoriesLoaded: false, pendingBillRecordMonth: '' },

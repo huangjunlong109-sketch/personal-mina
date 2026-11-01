@@ -1,3 +1,4 @@
+const cache = require('../../utils/cache')
 const cycleDayOptions = Array.from({ length: 28 }, (_, i) => `每月 ${i + 1} 日`)
 const defaultTypeOptions = ['支出', '收入']
 
@@ -50,13 +51,21 @@ Page({
   onCycleDayChange(e) {
     const index = Number(e.detail.value)
     const cycleStartDay = index + 1
+    const prevIndex = this.data.cycleDayIndex
     this.setData({ cycleDayIndex: index })
-    const app = getApp()
-    if (app && app.globalData) app.globalData.cycleStartDay = cycleStartDay
     wx.cloud.callFunction({
       name: 'settings_save',
       data: { cycle_start_day: cycleStartDay },
-    }).then(() => wx.showToast({ title: '已保存', icon: 'success' }))
+    }).then(res => {
+      if (!res.result || !res.result.success) throw new Error('settings_save_failed')
+      const app = getApp()
+      if (app && app.globalData) app.globalData.cycleStartDay = cycleStartDay
+      cache.bumpRecords()
+      wx.showToast({ title: '已保存', icon: 'success' })
+    }).catch(() => {
+      this.setData({ cycleDayIndex: prevIndex })
+      wx.showToast({ title: '保存失败', icon: 'none' })
+    })
   },
 
   onDefaultTypeChange(e) {

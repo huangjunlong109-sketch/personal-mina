@@ -1,5 +1,6 @@
 const { today, calcRecordMonth, yuanToFen, fenToYuan } = require('../../utils/date')
 const { getIconEmoji } = require('../../utils/categories')
+const cache = require('../../utils/cache')
 
 function fenToAmountInput(fen) {
   const s = fenToYuan(fen)
@@ -52,15 +53,30 @@ Page({
   },
 
   onLoad(options) {
+    this._unwatchCategories = cache.watchCategories(list => {
+      if (!this._pageReady) return
+      this.applyRecordCategories(this.data.currentType, list, this._preferredCategoryId || '')
+    })
     const editId = options.id || ''
     if (editId) {
+      this._pageReady = false
       this.setData({ editId })
       this.loadRecordForEdit(editId)
       return
     }
     const type = options.type || 'expense'
+    this._pageReady = true
     this.setData({ currentType: type, editId: '', recordDate: today() })
     this.loadCategories(type)
+  },
+
+  onUnload() {
+    if (this._unwatchCategories) this._unwatchCategories()
+  },
+
+  onShow() {
+    if (!this._pageReady) return
+    this.loadCategories(this.data.currentType, this._preferredCategoryId || '')
   },
 
   loadRecordForEdit(id) {
@@ -85,7 +101,9 @@ Page({
           editId: id,
         })
         wx.setNavigationBarTitle({ title: '编辑记录' })
-        return this.loadCategories(r.type || 'expense', r.category_id)
+        this._preferredCategoryId = r.category_id || ''
+        this._pageReady = true
+        return this.loadCategories(r.type || 'expense', this._preferredCategoryId)
       })
       .catch(e => {
         console.error('loadRecordForEdit', e)
@@ -94,41 +112,48 @@ Page({
       .finally(() => wx.hideLoading())
   },
 
-  loadCategories(type, preferredCategoryId) {
-    return wx.cloud.callFunction({
-      name: 'category_list',
-      data: { type },
+  applyRecordCategories(type, rows, preferredCategoryId) {
+    if (type !== this.data.currentType) return
+    const list = (rows || [])
+      .filter(item => item.type === type && !item.is_hidden)
+      .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+      .map(item => Object.assign({}, item, { emoji: getIconEmoji(item.icon) }))
+    let selected = null
+    if (this._userPickedCategory) {
+      selected = list.find(item => item._id === this.data.selectedCategoryId) || null
+    }
+    if (!selected && preferredCategoryId) selected = list.find(item => item._id === preferredCategoryId) || null
+    if (!selected) selected = list[0] || null
+    this.updateAmountState({
+      categories: list,
+      selectedCategoryId: selected ? selected._id : '',
+      selectedCategory: selected,
     })
-      .then(res => {
-        if (!res.result || !res.result.success) throw new Error('category_list_failed')
-        const list = (res.result.list || [])
-          .filter(c => !c.is_hidden)
-          .map(c => ({ ...c, emoji: getIconEmoji(c.icon) }))
-        let selected = list[0] || null
-        let selectedId = selected ? selected._id : ''
-        if (preferredCategoryId) {
-          const found = list.find(c => c._id === preferredCategoryId)
-          if (found) {
-            selected = found
-            selectedId = found._id
-          }
-        }
-        this.updateAmountState({
-          categories: list,
-          selectedCategoryId: selectedId,
-          selectedCategory: selected,
-        })
+  },
+
+  loadCategories(type, preferredCategoryId) {
+    const seq = (this._categorySeq || 0) + 1
+    this._categorySeq = seq
+    const cached = cache.readCategories()
+    if (cached) this.applyRecordCategories(type, cached, preferredCategoryId)
+    return cache.refreshCategories()
+      .then(({ list, fresh }) => {
+        if (!fresh || !list || seq !== this._categorySeq) return
+        this.applyRecordCategories(type, list, preferredCategoryId)
       })
       .catch(err => console.error('loadCategories error', err))
   },
 
   switchType(e) {
     const type = e.currentTarget.dataset.type
+    this._userPickedCategory = false
+    this._preferredCategoryId = ''
     this.updateAmountState({ currentType: type, selectedCategoryId: '', selectedCategory: null, categories: [] })
     this.loadCategories(type, '')
   },
 
   selectCategory(e) {
+    this._userPickedCategory = true
     const item = e.currentTarget.dataset.item
     this.updateAmountState({
       selectedCategoryId: item._id,
@@ -306,6 +331,7 @@ Page({
           },
         })
     p.then(() => {
+      cache.bumpRecords()
       wx.hideLoading()
       wx.showToast({ title: editId ? '已更新' : '已保存', icon: 'success', duration: 800 })
       setTimeout(() => wx.navigateBack(), 900)

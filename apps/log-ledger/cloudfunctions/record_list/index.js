@@ -85,5 +85,6 @@ exports.main = async (event, context) => {
     list,
     has_more: hasMore,
     next_offset: nextOffset,
+    cycle_start_day: cycleStartDay,
   }
 }
