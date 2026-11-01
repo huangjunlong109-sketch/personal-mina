@@ -1,4 +1,4 @@
-const { callFn } = require('../../utils/db')
+const cache = require('../../utils/cache')
 
 function buildDefaultStats() {
   return {
@@ -169,19 +169,27 @@ Page({
   onShow() {
     const app = getApp()
     if (!app || !app.globalData) return
+    if (typeof app.applyCachedVehicles === 'function') app.applyCachedVehicles()
+    const cachedId = app.globalData.currentVehicle && app.globalData.currentVehicle._id
+    if (cachedId) {
+      this.setData({ currentVehicle: app.globalData.currentVehicle })
+      this.loadDashboard(cachedId)
+    }
     const refresh = () => {
       const currentVehicle = app.globalData.currentVehicle || null
+      const nextId = currentVehicle && currentVehicle._id
       this.setData({ currentVehicle })
-      if (currentVehicle && currentVehicle._id) {
-        this.loadDashboard(currentVehicle._id)
-      } else {
+      if (!nextId) {
+        this._dashSeq = (this._dashSeq || 0) + 1
         this.setData({
           stats: buildDefaultStats(),
           records: [],
           loading: false,
           initialLoading: false,
         }, () => this.refreshChart())
+        return
       }
+      if (nextId !== cachedId) this.loadDashboard(nextId)
     }
     if (typeof app.ensureDefaultVehicle === 'function') {
       app.ensureDefaultVehicle().then(refresh).catch(() => refresh())
@@ -193,51 +201,55 @@ Page({
     }
   },
 
-  loadDashboard(vehicleId) {
-    const showSkeleton = !this.data.hasLoadedOnce
+  showDashboard(records) {
     this.setData({
-      loading: true,
-      initialLoading: showSkeleton,
-      chartTransitioning: !showSkeleton,
-    })
-    callFn('record.list', { vehicleId })
-      .then((listRes) => {
-        const records = (listRes && listRes.list) ? listRes.list : []
-        this.setData({
-          stats: {
-            ...buildDefaultStats(),
-            ...buildStatsFromRecords(records),
-          },
-          records,
-        }, () => this.refreshChart(() => {
-          this.setData({
-            loading: false,
-            initialLoading: false,
-            hasLoadedOnce: true,
-          }, () => {
-            this.safeDrawChart()
-          })
-          setTimeout(() => {
-            this.setData({ chartTransitioning: false })
-          }, 180)
-        }))
+      stats: {
+        ...buildDefaultStats(),
+        ...buildStatsFromRecords(records),
+      },
+      records,
+    }, () => this.refreshChart(() => {
+      this.setData({
+        loading: false,
+        initialLoading: false,
+        hasLoadedOnce: true,
+      }, () => {
+        this.safeDrawChart()
+      })
+      setTimeout(() => {
+        this.setData({ chartTransitioning: false })
+      }, 180)
+    }))
+  },
+
+  loadDashboard(vehicleId) {
+    const seq = (this._dashSeq || 0) + 1
+    this._dashSeq = seq
+    const cached = cache.readRecords(vehicleId)
+    if (cached) {
+      this.showDashboard(cached)
+    } else {
+      const showSkeleton = !this.data.hasLoadedOnce
+      this.setData({
+        loading: true,
+        initialLoading: showSkeleton,
+        chartTransitioning: !showSkeleton,
+      })
+    }
+    cache.refreshRecords(vehicleId)
+      .then(({ list, fresh }) => {
+        if (!fresh || !list || seq !== this._dashSeq) return
+        const currentId = this.data.currentVehicle && this.data.currentVehicle._id
+        if (currentId && currentId !== vehicleId) return
+        this.showDashboard(list)
       })
       .catch(() => {
-        this.setData({
-          stats: buildDefaultStats(),
-          records: [],
-        }, () => this.refreshChart(() => {
-          this.setData({
-            loading: false,
-            initialLoading: false,
-            hasLoadedOnce: true,
-          }, () => {
-            this.safeDrawChart()
-          })
-          setTimeout(() => {
-            this.setData({ chartTransitioning: false })
-          }, 180)
-        }))
+        if (seq !== this._dashSeq) return
+        if (cached) {
+          this.setData({ loading: false, initialLoading: false, hasLoadedOnce: true })
+          return
+        }
+        this.showDashboard([])
       })
   },
 

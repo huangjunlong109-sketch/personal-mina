@@ -1,4 +1,5 @@
 const { callFn } = require('../../utils/db')
+const cache = require('../../utils/cache')
 // 微信构建 npm 不会带上 xlsx/dist 子路径，直接引用 vendor 里的 mini 包
 const XLSX = require('../../vendor/xlsx.mini.min.js')
 
@@ -466,20 +467,23 @@ Page({
 
     this.setData({ status: 'importing' })
 
-    for (let i = 0; i < totalBatch; i++) {
-      const start = i * batchSize
-      const chunk = rows.slice(start, start + batchSize)
-      this.setData({ progressText: `⬆️ 导入中...(${i + 1}/${totalBatch})` })
-      const part = await callFn('record.importRows', { vehicleId, rows: chunk })
-      summary.success += part.success || 0
-      summary.updated += part.updated || 0
-      summary.failed += part.failed || 0
-      if (part.issues && part.issues.length) {
-        summary.issues = summary.issues.concat(part.issues)
+    try {
+      for (let i = 0; i < totalBatch; i++) {
+        const start = i * batchSize
+        const chunk = rows.slice(start, start + batchSize)
+        this.setData({ progressText: `⬆️ 导入中...(${i + 1}/${totalBatch})` })
+        const part = await callFn('record.importRows', { vehicleId, rows: chunk })
+        summary.success += part.success || 0
+        summary.updated += part.updated || 0
+        summary.failed += part.failed || 0
+        if (part.issues && part.issues.length) {
+          summary.issues = summary.issues.concat(part.issues)
+        }
       }
+      this.setData({ status: 'done', progressText: '', result: summary })
+    } finally {
+      cache.invalidateRecords(vehicleId)
     }
-
-    this.setData({ status: 'done', progressText: '', result: summary })
   },
 
   reset() {
@@ -500,6 +504,7 @@ Page({
         this.setData({ status: 'importing', progressText: '🗑 清空中...' })
         callFn('record.clearAll', { vehicleId: currentVehicle._id })
           .then((res) => {
+            cache.invalidateRecords(currentVehicle._id)
             this.setData({ status: 'idle', progressText: '' })
             wx.showToast({ title: `已清空 ${res.removed || 0} 条`, icon: 'success' })
           })

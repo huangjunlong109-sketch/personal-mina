@@ -1,4 +1,4 @@
-const { callFn } = require('./utils/db')
+const cache = require('./utils/cache')
 
 App({
   onLaunch() {
@@ -13,20 +13,32 @@ App({
     vehicles: [],
   },
 
+  syncVehicles(list) {
+    const vehicles = Array.isArray(list) ? list : []
+    this.globalData.vehicles = vehicles
+    if (!vehicles.length) {
+      this.globalData.currentVehicleId = ''
+      this.globalData.currentVehicle = null
+      return
+    }
+    const current = vehicles.find(v => v._id === this.globalData.currentVehicleId) || vehicles[0]
+    this.globalData.currentVehicleId = current._id
+    this.globalData.currentVehicle = current
+  },
+
+  applyCachedVehicles() {
+    const list = cache.readVehicles()
+    if (!list) return false
+    if (this.globalData.currentVehicleId && !list.some(v => v._id === this.globalData.currentVehicleId)) return false
+    this.syncVehicles(list)
+    return true
+  },
+
   loadDefaultVehicle() {
-    return callFn('vehicle.list')
-      .then((res) => {
-        const vehicles = (res && res.list) ? res.list : []
-        if (!vehicles.length) return
-        if (!this.globalData.currentVehicleId) {
-          this.globalData.currentVehicleId = vehicles[0]._id
-        }
-        const current =
-          vehicles.find((v) => v._id === this.globalData.currentVehicleId) ||
-          vehicles[0] ||
-          null
-        this.globalData.vehicles = vehicles
-        this.globalData.currentVehicle = current
+    this.applyCachedVehicles()
+    return cache.refreshVehicles()
+      .then(({ list, fresh }) => {
+        if (fresh && list) this.syncVehicles(list)
       })
       .catch((e) => {
         if (e && e.errMsg && e.errMsg.includes('timeout')) {

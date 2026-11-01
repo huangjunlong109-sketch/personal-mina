@@ -1,4 +1,5 @@
 const { callFn } = require('../../utils/db')
+const cache = require('../../utils/cache')
 const { today } = require('../../utils/date')
 const { validateRecord } = require('../../utils/calc')
 
@@ -86,8 +87,8 @@ Page({
     const app = getApp()
     const vehicleId = app.globalData.currentVehicleId
     if (!vehicleId) return
-    callFn('record.list', { vehicleId }).then(res => {
-      const latest = res && res.list && res.list.length ? res.list[0] : null
+    const applyLatest = (list) => {
+      const latest = list && list.length ? list[0] : null
       if (!latest) return
       const nextData = {}
       if (latest.odometer) nextData.lastOdometer = latest.odometer
@@ -95,7 +96,11 @@ Page({
         nextData.unitPrice = formatDecimal(Number(latest.unitPrice))
       }
       if (Object.keys(nextData).length) this.setData(nextData)
-    })
+    }
+    applyLatest(cache.readRecords(vehicleId))
+    cache.refreshRecords(vehicleId).then(({ list, fresh }) => {
+      if (fresh && list) applyLatest(list)
+    }).catch(() => {})
   },
 
   onDateChange(e) { this.setData({ refuelDate: e.detail.value }) },
@@ -213,6 +218,7 @@ Page({
       : callFn('record.add', { data: record })
 
     fn.then(() => {
+      cache.invalidateRecords(currentVehicle._id)
       wx.showToast({ title: '保存成功' })
       setTimeout(() => wx.navigateBack(), 900)
     }).catch(() => {

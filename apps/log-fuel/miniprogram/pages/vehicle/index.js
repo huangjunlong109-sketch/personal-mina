@@ -1,4 +1,5 @@
 const { callFn } = require('../../utils/db')
+const cache = require('../../utils/cache')
 
 Page({
   data: {
@@ -26,6 +27,7 @@ Page({
           app.globalData.currentVehicleId = res._id
           app.globalData.currentVehicle = { _id: res._id, brand, model, plate }
         }
+        cache.invalidateVehicles()
         wx.showToast({ title: '添加成功' })
         setTimeout(() => wx.navigateBack(), 900)
       })

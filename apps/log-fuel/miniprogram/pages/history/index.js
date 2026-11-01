@@ -1,4 +1,5 @@
 const { callFn } = require('../../utils/db')
+const cache = require('../../utils/cache')
 const { groupByMonth, formatDayCN } = require('../../utils/date')
 
 Page({
@@ -11,9 +12,20 @@ Page({
   onShow() {
     const app = getApp()
     if (!app || !app.globalData) return
+    if (typeof app.applyCachedVehicles === 'function') app.applyCachedVehicles()
+    const cachedId = app.globalData.currentVehicleId
+    if (cachedId) {
+      this.setData({ vehicleId: cachedId })
+      this.loadRecords(cachedId)
+    }
     const refresh = () => {
       const vehicleId = app.globalData.currentVehicleId
-      if (vehicleId) {
+      if (!vehicleId) {
+        this._recordSeq = (this._recordSeq || 0) + 1
+        this.setData({ groups: [], loading: false, vehicleId: '' })
+        return
+      }
+      if (vehicleId !== cachedId) {
         this.setData({ vehicleId })
         this.loadRecords(vehicleId)
       }
@@ -25,20 +37,31 @@ Page({
     }
   },
 
+  showGroups(records) {
+    const groups = groupByMonth(records).map(g => ({
+      ...g,
+      records: g.records.map(r => ({
+        ...r,
+        dayLabel: formatDayCN(r.refuelDate),
+        hasIssue: r.issueFlags && r.issueFlags.length > 0 && !r.confirmedByUser,
+      })),
+    }))
+    this.setData({ groups, loading: false })
+  },
+
   loadRecords(vehicleId) {
-    this.setData({ loading: true })
-    callFn('record.list', { vehicleId }).then(res => {
-      const records = (res && res.list) ? res.list : []
-      const groups = groupByMonth(records).map(g => ({
-        ...g,
-        records: g.records.map(r => ({
-          ...r,
-          dayLabel: formatDayCN(r.refuelDate),
-          hasIssue: r.issueFlags && r.issueFlags.length > 0 && !r.confirmedByUser,
-        })),
-      }))
-      this.setData({ groups, loading: false })
-    }).catch(() => this.setData({ loading: false }))
+    const seq = (this._recordSeq || 0) + 1
+    this._recordSeq = seq
+    const cached = cache.readRecords(vehicleId)
+    if (cached) this.showGroups(cached)
+    else this.setData({ loading: true })
+    cache.refreshRecords(vehicleId).then(({ list, fresh }) => {
+      if (!fresh || !list || seq !== this._recordSeq || vehicleId !== this.data.vehicleId) return
+      this.showGroups(list)
+    }).catch(() => {
+      if (seq !== this._recordSeq) return
+      if (!cached) this.setData({ loading: false })
+    })
   },
 
   getRecordById(id) {
@@ -78,6 +101,7 @@ Page({
       success: (res) => {
         if (!res.confirm) return
         callFn('record.confirmIssue', { id }).then(() => {
+          cache.invalidateRecords(this.data.vehicleId)
           wx.showToast({ title: '已确认' })
           this.loadRecords(this.data.vehicleId)
         })
@@ -93,6 +117,7 @@ Page({
       success: (r) => {
         if (r.confirm) {
           callFn('record.delete', { id }).then(() => {
+            cache.invalidateRecords(this.data.vehicleId)
             wx.showToast({ title: '已删除' })
             this.loadRecords(this.data.vehicleId)
           })

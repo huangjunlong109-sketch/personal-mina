@@ -1,4 +1,5 @@
 const { callFn } = require('../../utils/db')
+const cache = require('../../utils/cache')
 
 Page({
   data: {
@@ -14,19 +15,28 @@ Page({
     this.loadVehicles()
   },
 
-  loadVehicles() {
-    callFn('vehicle.list').then(res => {
-      const vehicles = (res && res.list) ? res.list : []
-      const app = getApp()
-      if (!app) return
-      if (!app.globalData.currentVehicleId && vehicles.length > 0) {
-        app.globalData.currentVehicleId = vehicles[0]._id
-        app.globalData.currentVehicle = vehicles[0]
-      }
-      const currentVehicle = vehicles.find(v => v._id === app.globalData.currentVehicleId) || vehicles[0] || null
-      app.globalData.currentVehicle = currentVehicle
-      this.setData({ vehicles, currentVehicle })
+  applyVehicleList(list) {
+    const app = getApp()
+    if (!app || typeof app.syncVehicles !== 'function') return
+    app.syncVehicles(list)
+    this.setData({
+      vehicles: app.globalData.vehicles,
+      currentVehicle: app.globalData.currentVehicle,
     })
+  },
+
+  loadVehicles() {
+    const app = getApp()
+    if (app && typeof app.applyCachedVehicles === 'function') app.applyCachedVehicles()
+    if (app && app.globalData.vehicles && app.globalData.vehicles.length) {
+      this.setData({
+        vehicles: app.globalData.vehicles,
+        currentVehicle: app.globalData.currentVehicle,
+      })
+    }
+    cache.refreshVehicles().then(({ list, fresh }) => {
+      if (fresh && list) this.applyVehicleList(list)
+    }).catch(e => console.error('loadVehicles', e))
   },
 
   selectVehicle(e) {
@@ -62,6 +72,8 @@ Page({
             app.globalData.currentVehicleId = ''
             app.globalData.currentVehicle = null
           }
+          cache.invalidateRecords(id)
+          cache.invalidateVehicles()
           this.loadVehicles()
         })
       },
