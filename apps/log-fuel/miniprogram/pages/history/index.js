@@ -2,6 +2,21 @@ const { callFn } = require('../../utils/db')
 const cache = require('../../utils/cache')
 const { groupByMonth, formatDayCN } = require('../../utils/date')
 
+function metricText(value, unit) {
+  if (value == null || value === '') return '--'
+  return `${value} ${unit}`
+}
+
+function isSegmentConsumption(record) {
+  if (record.importSource === 'excel' || record.tankFull === false) return false
+  const consumption = Number(record.fuelConsumption)
+  const liters = Number(record.liters)
+  const addedMileage = Number(record.addedMileage)
+  if (!(consumption > 0) || !(liters > 0) || !(addedMileage > 0)) return false
+  const single = Math.round((liters / addedMileage) * 100 * 100) / 100
+  return Math.abs(consumption - single) > 0.1
+}
+
 Page({
   data: {
     groups: [],
@@ -43,6 +58,9 @@ Page({
       records: g.records.map(r => ({
         ...r,
         dayLabel: formatDayCN(r.refuelDate),
+        consumptionText: metricText(r.fuelConsumption, 'L/100km'),
+        costText: metricText(r.costPerKm, '元/km'),
+        segmentConsumption: isSegmentConsumption(r),
         hasIssue: r.issueFlags && r.issueFlags.length > 0 && !r.confirmedByUser,
       })),
     }))

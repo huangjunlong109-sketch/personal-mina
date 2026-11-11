@@ -22,8 +22,8 @@
         <view class="card-header">
           <text class="card-day">{{r.dayLabel}}</text>
           <view class="card-kpi">
-            <text class="card-consumption">{{r.fuelConsumption}} L/100km</text>
-            <text class="card-cost-km">{{r.costPerKm}} 元/km</text>
+            <text class="card-consumption">{{r.consumptionText}}</text>
+            <text class="card-cost-km">{{r.costText}}</text>
           </view>
           <view class="card-more" bindtap="onMoreTap" data-id="{{r._id}}">···</view>
         </view>
@@ -52,6 +52,7 @@
             <text class="added-km">+{{r.addedMileage}}km</text>
             <view wx:if="{{r.tankFull}}" class="tag tag-full">已加满</view>
             <view wx:else class="tag tag-unfull">未加满</view>
+            <view wx:if="{{r.segmentConsumption}}" class="tag tag-segment">区间油耗</view>
             <view wx:if="{{r.hasIssue}}" class="tag tag-issue">⚠️ 待核实</view>
           </view>
         </view>

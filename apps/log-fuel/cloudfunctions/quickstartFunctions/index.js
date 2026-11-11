@@ -16,7 +16,7 @@ function toYmd(dateLike) {
   return String(dateLike).slice(0, 10)
 }
 
-function validateRecord(record, prevOdometer) {
+function validateRecord(record, prevOdometer, segment) {
   const flags = []
   const { liters, unitPrice, totalAmount, odometer, addedMileage, fuelConsumption } = record
 
@@ -31,8 +31,12 @@ function validateRecord(record, prevOdometer) {
     const calcAdded = odometer - prevOdometer
     if (Math.abs(calcAdded - addedMileage) > 1) flags.push('mileage_mismatch')
   }
-  if (fuelConsumption != null && addedMileage > 0 && liters) {
-    const calc = Math.round((liters / addedMileage) * 100 * 100) / 100
+  const segmentMileage = segment && Number(segment.mileage)
+  const segmentLiters = segment && Number(segment.liters)
+  const checkMileage = segmentMileage > 0 && segmentLiters > 0 ? segmentMileage : addedMileage
+  const checkLiters = segmentMileage > 0 && segmentLiters > 0 ? segmentLiters : liters
+  if (fuelConsumption != null && checkMileage > 0 && checkLiters) {
+    const calc = Math.round((checkLiters / checkMileage) * 100 * 100) / 100
     if (Math.abs(fuelConsumption - calc) > 0.1) flags.push('consumption_mismatch')
   }
   if (addedMileage != null && addedMileage <= 0) flags.push('interval_invalid')
@@ -73,7 +77,8 @@ function hasOwn(record, key) {
 }
 
 function needsManualDerivedRepair(records) {
-  return (records || []).some(record =>
+  const list = records || []
+  const missing = list.some(record =>
     record.importSource !== 'excel' && (
       !hasOwn(record, 'addedMileage') ||
       !hasOwn(record, 'fuelConsumption') ||
@@ -82,6 +87,8 @@ function needsManualDerivedRepair(records) {
       record.confirmedByUser == null
     )
   )
+  if (missing) return true
+  return manualSegmentDrift(list)
 }
 
 function sortByRecordAsc(a, b) {
@@ -107,26 +114,78 @@ function normalizeManualRecord(data, vehicleId) {
   }
 }
 
-function buildManualDerived(record, prevOdometer) {
+function emptySegment() {
+  return { prevOdometer: null, lastFullOdometer: null, pendingLiters: 0, pendingAmount: 0 }
+}
+
+function advanceSegment(state, record) {
+  const odometer = record.odometer != null ? Number(record.odometer) : null
+  if (record.tankFull !== false && odometer != null) {
+    state.lastFullOdometer = odometer
+    state.pendingLiters = 0
+    state.pendingAmount = 0
+  } else {
+    state.pendingLiters += Number(record.liters) || 0
+    state.pendingAmount += Number(record.totalAmount) || 0
+  }
+  state.prevOdometer = odometer
+}
+
+function buildManualDerived(record, segment) {
   const odometer = Number(record.odometer)
   const liters = Number(record.liters)
   const totalAmount = Number(record.totalAmount)
+  const prevOdometer = segment ? segment.prevOdometer : null
   const hasPrev = prevOdometer != null && Number.isFinite(Number(prevOdometer))
   const hasOdometer = Number.isFinite(odometer) && odometer > 0
   const addedMileage = hasPrev && hasOdometer ? odometer - Number(prevOdometer) : null
-  const fuelConsumption = addedMileage > 0 && liters > 0
-    ? roundTo((liters / addedMileage) * 100)
-    : null
-  const costPerKm = addedMileage > 0 && totalAmount > 0
-    ? roundTo(totalAmount / addedMileage)
-    : null
+  const tankFull = record.tankFull !== false
+  const lastFull = segment && segment.lastFullOdometer
+  const hasBaseline = lastFull != null && Number.isFinite(Number(lastFull))
+  let fuelConsumption = null
+  let costPerKm = null
+  let segmentLiters = null
+  let segmentMileage = null
+  if (tankFull && hasBaseline && hasOdometer) {
+    segmentMileage = odometer - Number(lastFull)
+    segmentLiters = Number(segment.pendingLiters || 0) + (Number.isFinite(liters) ? liters : 0)
+    const segmentAmount = Number(segment.pendingAmount || 0) + (Number.isFinite(totalAmount) ? totalAmount : 0)
+    if (segmentMileage > 0 && segmentLiters > 0) {
+      fuelConsumption = roundTo((segmentLiters / segmentMileage) * 100)
+    }
+    if (segmentMileage > 0 && segmentAmount > 0) {
+      costPerKm = roundTo(segmentAmount / segmentMileage)
+    }
+  }
+  const spanned = tankFull && Number(segment && segment.pendingLiters) > 0
   const next = { ...record, addedMileage, fuelConsumption, costPerKm }
   return {
     addedMileage,
     fuelConsumption,
     costPerKm,
-    issueFlags: validateRecord(next, hasPrev ? Number(prevOdometer) : null),
+    issueFlags: validateRecord(
+      next,
+      hasPrev ? Number(prevOdometer) : null,
+      spanned ? { liters: segmentLiters, mileage: segmentMileage } : null
+    ),
   }
+}
+
+function manualSegmentDrift(records) {
+  const state = emptySegment()
+  for (const record of (records || []).slice().sort(sortByRecordAsc)) {
+    if (record.importSource !== 'excel') {
+      const derived = buildManualDerived(record, state)
+      if (
+        !sameValue(record.fuelConsumption ?? null, derived.fuelConsumption) ||
+        !sameValue(record.costPerKm ?? null, derived.costPerKm)
+      ) {
+        return true
+      }
+    }
+    advanceSegment(state, record)
+  }
+  return false
 }
 
 async function recalcManualRecords(openid, vehicleId) {
@@ -137,12 +196,12 @@ async function recalcManualRecords(openid, vehicleId) {
     .limit(500)
     .get()
   const records = (res.data || []).sort(sortByRecordAsc)
-  let prevOdometer = null
+  const state = emptySegment()
   const now = new Date()
 
   for (const record of records) {
     if (record.importSource !== 'excel') {
-      const derived = buildManualDerived(record, prevOdometer)
+      const derived = buildManualDerived(record, state)
       const patch = {}
       let changed = false
 
@@ -170,7 +229,7 @@ async function recalcManualRecords(openid, vehicleId) {
         Object.assign(record, patch)
       }
     }
-    prevOdometer = record.odometer != null ? Number(record.odometer) : null
+    advanceSegment(state, record)
   }
 }
 
@@ -291,22 +350,37 @@ async function recordLastOdometer(openid, vehicleId) {
   }
 }
 
+function closedRecordTotals(records) {
+  const asc = (records || []).slice().sort(sortByRecordAsc)
+  let lastFull = -1
+  for (let i = 0; i < asc.length; i++) {
+    if (asc[i].tankFull !== false) lastFull = i
+  }
+  let liters = 0
+  let mileage = 0
+  for (let i = 0; i <= lastFull; i++) {
+    liters += Number(asc[i].liters) || 0
+    mileage += Number(asc[i].addedMileage) || 0
+  }
+  return { liters, mileage }
+}
+
 async function recordStats(openid, vehicleId) {
-  const res = await db.collection('fuel_records')
-    .where({ _openid: openid, vehicleId, isDeleted: _.neq(1) })
-    .orderBy('refuelDate', 'desc')
-    .orderBy('odometer', 'desc')
-    .limit(500)
-    .get()
-  const records = res.data
+  let records = await fetchRecordsDesc(openid, vehicleId)
+  if (needsManualDerivedRepair(records)) {
+    await recalcManualRecords(openid, vehicleId)
+    records = await fetchRecordsDesc(openid, vehicleId)
+  }
   if (!records.length) return {}
 
-  const latestConsumption = records[0].fuelConsumption || null
+  const latestHit = records.find(r => r.tankFull !== false && Number(r.fuelConsumption) > 0)
+  const latestConsumption = latestHit ? latestHit.fuelConsumption : null
   const totalLiters = records.reduce((s, r) => s + (r.liters || 0), 0)
   const totalAmount = records.reduce((s, r) => s + (r.totalAmount || 0), 0)
   const totalMileage = records.reduce((s, r) => s + (r.addedMileage || 0), 0)
-  const avgConsumption = totalMileage > 0
-    ? Math.round(totalLiters / totalMileage * 100 * 100) / 100
+  const closed = closedRecordTotals(records)
+  const avgConsumption = closed.mileage > 0
+    ? Math.round(closed.liters / closed.mileage * 100 * 100) / 100
     : null
 
   // 日均里程：总增加里程 / 日历天数跨度

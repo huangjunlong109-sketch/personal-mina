@@ -123,4 +123,5 @@
 
 .tag-full { background: rgba(52,199,89,0.12); color: #34C759; }
 .tag-unfull { background: rgba(140,140,160,0.12); color: #8C8CA0; }
+.tag-segment { background: rgba(107,127,194,0.12); color: #6B7FC2; }
 .tag-issue { background: rgba(255,149,0,0.12); color: #FF9500; }

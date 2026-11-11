@@ -50,9 +50,19 @@ function sortByRecord(a, b) {
   return Number(a.odometer || 0) - Number(b.odometer || 0)
 }
 
+function recordsThroughLastFull(records) {
+  const asc = (records || []).slice().sort(sortByRecord)
+  let lastFull = -1
+  for (let i = 0; i < asc.length; i++) {
+    if (asc[i].tankFull !== false) lastFull = i
+  }
+  if (lastFull < 0) return []
+  return asc.slice(0, lastFull + 1)
+}
+
 function buildConsumptionPoints(records) {
   return (records || [])
-    .filter(item => item.refuelDate && Number(item.fuelConsumption) > 0)
+    .filter(item => item.refuelDate && item.tankFull !== false && Number(item.fuelConsumption) > 0)
     .sort(sortByRecord)
     .map(item => ({
       label: formatMonthDay(item.refuelDate),
@@ -79,13 +89,16 @@ function buildStatsFromRecords(records) {
   const list = records || []
   if (!list.length) return buildDefaultStats()
 
-  const latestConsumption = Number(list[0].fuelConsumption) > 0
-    ? roundTo(list[0].fuelConsumption, 2)
-    : null
+  const latestSource = list.slice().sort((a, b) => sortByRecord(b, a))
+    .find(item => item.tankFull !== false && Number(item.fuelConsumption) > 0)
+  const latestConsumption = latestSource ? roundTo(latestSource.fuelConsumption, 2) : null
   const totalLiters = roundTo(list.reduce((sum, item) => sum + (Number(item.liters) || 0), 0), 2)
   const totalAmount = roundTo(list.reduce((sum, item) => sum + (Number(item.totalAmount) || 0), 0), 2)
   const totalMileage = list.reduce((sum, item) => sum + (Number(item.addedMileage) || 0), 0)
-  const avgConsumption = totalMileage > 0 ? roundTo((totalLiters / totalMileage) * 100, 2) : null
+  const closed = recordsThroughLastFull(list)
+  const avgLiters = closed.reduce((sum, item) => sum + (Number(item.liters) || 0), 0)
+  const avgMileage = closed.reduce((sum, item) => sum + (Number(item.addedMileage) || 0), 0)
+  const avgConsumption = avgMileage > 0 ? roundTo((avgLiters / avgMileage) * 100, 2) : null
 
   let dailyMileage = null
   if (list.length >= 2) {

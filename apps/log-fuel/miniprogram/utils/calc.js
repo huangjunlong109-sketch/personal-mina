@@ -26,7 +26,7 @@ function calcCostPerKm(totalAmount, addedMileage) {
  * 校验记录，返回 issueFlags 数组
  * 以传入值为准，仅做标记，不改写字段
  */
-function validateRecord(record, prevOdometer) {
+function validateRecord(record, prevOdometer, segment) {
   const flags = []
   const { liters, unitPrice, totalAmount, odometer, addedMileage, fuelConsumption } = record
 
@@ -48,8 +48,12 @@ function validateRecord(record, prevOdometer) {
     }
   }
 
-  if (fuelConsumption != null && addedMileage != null && addedMileage > 0 && liters) {
-    const calcConsump = calcConsumption(liters, addedMileage)
+  const segmentMileage = segment && Number(segment.mileage)
+  const segmentLiters = segment && Number(segment.liters)
+  const checkMileage = segmentMileage > 0 && segmentLiters > 0 ? segmentMileage : addedMileage
+  const checkLiters = segmentMileage > 0 && segmentLiters > 0 ? segmentLiters : liters
+  if (fuelConsumption != null && checkMileage > 0 && checkLiters) {
+    const calcConsump = calcConsumption(checkLiters, checkMileage)
     if (calcConsump && Math.abs(fuelConsumption - calcConsump) > 0.1) {
       flags.push('consumption_mismatch')
     }
